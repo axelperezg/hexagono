@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+
+    /* Hexágono Research marketing site (resources/views/welcome.blade.php).
+       A single cold accent used sparingly against a near-black backdrop. */
+    --color-electric: #4a9eff;
+    --color-ink: #0a0a0a;
+    --color-panel: #111111;
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+
+/* -------------------------------------------------------------------------
+   Hexágono Research landing page (resources/views/welcome.blade.php)
+   Sober, data-infrastructure microinteractions: scroll fade-ins and a
+   thin underline that draws itself on hover. Driven by resources/js/landing.js.
+   ------------------------------------------------------------------------- */
+
+/* Elements start hidden/offset and are revealed by adding .is-visible
+   once they scroll into view (see the IntersectionObserver in landing.js). */
+.reveal {
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* A thin line that draws itself left-to-right on hover/focus. */
+.underline-draw {
+    position: relative;
+}
+
+.underline-draw::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.25rem;
+    width: 100%;
+    height: 1px;
+    background: var(--color-electric);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.underline-draw:hover::after,
+.underline-draw:focus-visible::after {
+    transform: scaleX(1);
+}
+
+/* Header starts fully transparent over the hero and solidifies once the
+   page scrolls (toggled by resources/js/landing.js). */
+#site-header {
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+    backdrop-filter: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+#site-header.is-scrolled {
+    background-color: color-mix(in oklab, var(--color-ink) 88%, transparent);
+    border-bottom-color: color-mix(in oklab, white 8%, transparent);
+    backdrop-filter: blur(8px);
+}
+
+/* Faint grid backdrop used behind sections to suggest infrastructure/data. */
+.grid-backdrop {
+    background-image:
+        linear-gradient(to right, color-mix(in oklab, white 6%, transparent) 1px, transparent 1px),
+        linear-gradient(to bottom, color-mix(in oklab, white 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .underline-draw::after {
+        transition: none;
+    }
+}
