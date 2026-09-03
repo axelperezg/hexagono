@@ -2,14 +2,15 @@
  * Microinteractions for the Hexágono Research landing page
  * (resources/views/welcome.blade.php).
  *
- * Plain JavaScript, no framework: a subtle animated node/network canvas
- * behind the hero, a header that solidifies on scroll, scroll-triggered
- * fade-ins, a mobile nav toggle, and a fetch()-based contact form submit
- * that shows success/validation errors without a full page reload.
+ * Plain JavaScript, no framework: a subtle animated hexagon honeycomb
+ * canvas behind the hero, a header that solidifies on scroll,
+ * scroll-triggered fade-ins, a mobile nav toggle, and a fetch()-based
+ * contact form submit that shows success/validation errors without a
+ * full page reload.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    initNetworkCanvas();
+    initHoneycombCanvas();
     initHeaderScrollState();
     initMobileNav();
     initScrollReveal();
@@ -17,12 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Draws a sparse field of nodes connected by thin lines when close enough,
- * gently drifting. Suggests "data / infrastructure" without being flashy.
- * Skipped entirely when the visitor prefers reduced motion.
+ * Draws a grid of pointy-top hexagons (echoing the brand mark) tiling the
+ * hero background, each gently breathing in and out of brightness on its
+ * own phase so the honeycomb reads as quietly "alive" without being
+ * flashy. Skipped entirely when the visitor prefers reduced motion.
  */
-function initNetworkCanvas() {
-    const canvas = document.getElementById('network-canvas');
+function initHoneycombCanvas() {
+    const canvas = document.getElementById('honeycomb-canvas');
 
     if (!canvas) {
         return;
@@ -35,11 +37,38 @@ function initNetworkCanvas() {
         return;
     }
 
-    /** @type {{x: number, y: number, vx: number, vy: number}[]} */
-    let nodes = [];
+    const hexSize = 32; // center-to-vertex radius
+    const hexGap = 2; // shrinks each drawn hexagon slightly so cell edges read as separate
+
+    /** @type {{x: number, y: number, phase: number, speed: number}[]} */
+    let cells = [];
     let width = 0;
     let height = 0;
-    const linkDistance = 140;
+
+    function buildGrid() {
+        const hexWidth = Math.sqrt(3) * hexSize;
+        const vertSpacing = hexSize * 1.5;
+        const cols = Math.ceil(width / hexWidth) + 2;
+        const rows = Math.ceil(height / vertSpacing) + 2;
+
+        const grid = [];
+
+        for (let row = -1; row < rows; row++) {
+            const y = row * vertSpacing;
+            const xOffset = row % 2 !== 0 ? hexWidth / 2 : 0;
+
+            for (let col = -1; col < cols; col++) {
+                grid.push({
+                    x: col * hexWidth + xOffset,
+                    y,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 0.3 + Math.random() * 0.5,
+                });
+            }
+        }
+
+        return grid;
+    }
 
     function resize() {
         width = canvas.clientWidth;
@@ -48,55 +77,46 @@ function initNetworkCanvas() {
         canvas.height = height * window.devicePixelRatio;
         ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
 
-        const nodeCount = Math.max(24, Math.round((width * height) / 28000));
-        nodes = Array.from({ length: nodeCount }, () => ({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.25,
-            vy: (Math.random() - 0.5) * 0.25,
-        }));
+        cells = buildGrid();
     }
 
-    function step() {
+    function tracePath(x, y, size) {
+        ctx.beginPath();
+
+        for (let i = 0; i < 6; i++) {
+            const angle = ((Math.PI * 2) / 6) * i - Math.PI / 2;
+            const px = x + size * Math.cos(angle);
+            const py = y + size * Math.sin(angle);
+
+            if (i === 0) {
+                ctx.moveTo(px, py);
+            } else {
+                ctx.lineTo(px, py);
+            }
+        }
+
+        ctx.closePath();
+    }
+
+    /**
+     * @param {number} now DOMHighResTimeStamp from requestAnimationFrame
+     */
+    function step(now) {
+        const t = now / 1000;
         ctx.clearRect(0, 0, width, height);
 
-        for (const node of nodes) {
-            node.x += node.vx;
-            node.y += node.vy;
+        for (const cell of cells) {
+            const pulse = (Math.sin(t * cell.speed + cell.phase) + 1) / 2; // 0..1
 
-            if (node.x < 0 || node.x > width) {
-                node.vx *= -1;
+            tracePath(cell.x, cell.y, hexSize - hexGap);
+            ctx.strokeStyle = `rgba(74, 158, 255, ${0.04 + pulse * 0.12})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            if (pulse > 0.82) {
+                ctx.fillStyle = `rgba(74, 158, 255, ${(pulse - 0.82) * 0.5})`;
+                ctx.fill();
             }
-
-            if (node.y < 0 || node.y > height) {
-                node.vy *= -1;
-            }
-        }
-
-        for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
-                const a = nodes[i];
-                const b = nodes[j];
-                const dx = a.x - b.x;
-                const dy = a.y - b.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < linkDistance) {
-                    ctx.strokeStyle = `rgba(74, 158, 255, ${0.12 * (1 - distance / linkDistance)})`;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(a.x, a.y);
-                    ctx.lineTo(b.x, b.y);
-                    ctx.stroke();
-                }
-            }
-        }
-
-        for (const node of nodes) {
-            ctx.fillStyle = 'rgba(74, 158, 255, 0.45)';
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 1.4, 0, Math.PI * 2);
-            ctx.fill();
         }
 
         requestAnimationFrame(step);

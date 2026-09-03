@@ -90,8 +90,8 @@
     <main>
         {{-- ============================== HERO ============================== --}}
         <section id="inicio" class="relative isolate flex min-h-screen items-center overflow-hidden border-b border-white/10">
-            {{-- Animated node network, purely decorative --}}
-            <canvas id="network-canvas" class="absolute inset-0 -z-10 h-full w-full" aria-hidden="true"></canvas>
+            {{-- Animated hexagon honeycomb, purely decorative --}}
+            <canvas id="honeycomb-canvas" class="absolute inset-0 -z-10 h-full w-full" aria-hidden="true"></canvas>
             <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-ink/20 via-ink/70 to-ink"></div>
 
             <div class="mx-auto max-w-5xl px-6 pt-32 pb-24 lg:px-8">
