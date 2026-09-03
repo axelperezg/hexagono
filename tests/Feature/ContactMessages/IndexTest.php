@@ -31,8 +31,12 @@ test('it lists contact messages with the newest first', function () {
 test('it filters messages by search term', function () {
     $this->actingAs(User::factory()->create());
 
-    ContactMessage::factory()->create(['name' => 'Ana Torres', 'email' => 'ana@example.com']);
-    ContactMessage::factory()->create(['name' => 'Luis Pérez', 'email' => 'luis@example.com']);
+    // Institution is pinned (rather than left to the factory's random
+    // faker->company()) so it can never accidentally contain the search
+    // term itself, which the query also matches against — see
+    // App\Livewire\ContactMessages\Index::messages().
+    ContactMessage::factory()->create(['name' => 'Ana Torres', 'email' => 'ana@example.com', 'institution' => 'Secretaría de Ejemplo']);
+    ContactMessage::factory()->create(['name' => 'Luis Pérez', 'email' => 'luis@example.com', 'institution' => 'Despacho Ríos']);
 
     Livewire::test(Index::class)
         ->set('search', 'ana')
