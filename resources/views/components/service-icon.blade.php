@@ -42,5 +42,21 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 3.5h9l3.5 3.5V20a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5Z" />
             <path stroke-linecap="round" d="M9 12.5h6M9 15.5h6M14.5 3.5V7h3.5" />
             @break
+
+        @case('users')
+            <circle cx="9" cy="8" r="2.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 19c.5-3 2.5-5 5-5s4.5 2 5 5" />
+            <circle cx="17" cy="9" r="2" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19c.2-2 1.2-3.5 3-4" />
+            @break
+
+        @case('network')
+            <circle cx="6" cy="6" r="1.75" />
+            <circle cx="18" cy="6" r="1.75" />
+            <circle cx="12" cy="12" r="1.75" />
+            <circle cx="6" cy="18" r="1.75" />
+            <circle cx="18" cy="18" r="1.75" />
+            <path stroke-linecap="round" d="M7.5 7.2 10.6 10.6M16.5 7.2 13.4 10.6M10.6 13.4 7.5 16.8M13.4 13.4 16.5 16.8" />
+            @break
     @endswitch
 </svg>

@@ -34,7 +34,7 @@ class ContactMessageReceived extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nuevo mensaje de contacto — Hexágono Research',
+            subject: 'Nuevo mensaje de contacto — Hexágono Communication Intelligence',
         );
     }
 

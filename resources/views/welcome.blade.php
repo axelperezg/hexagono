@@ -1,5 +1,5 @@
 {{--
-    Landing page for Hexágono Research.
+    Landing page for Hexágono Communication Intelligence.
 
     Single Blade view (no SPA) rendered at the "/" route (routes/web.php).
     Sections, top to bottom: header, hero, servicios, metodología, sectores,
@@ -18,14 +18,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- SEO --}}
-    <title>Hexágono Research — Investigación de mercados y evaluación de campañas de comunicación social</title>
-    <meta name="description" content="Hexágono Research es una firma mexicana de investigación de mercados especializada en estudios pre-test y post-test de campañas de comunicación social para gobierno federal, dependencias y organismos públicos.">
+    <title>Hexágono Communication Intelligence — Investigación de mercados y evaluación de campañas de comunicación social</title>
+    <meta name="description" content="Hexágono Communication Intelligence es una firma mexicana de investigación de mercados especializada en estudios pre-test y post-test de campañas de comunicación social para gobierno federal, dependencias y organismos públicos.">
     <meta name="robots" content="index, follow">
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Hexágono Research">
-    <meta property="og:title" content="Hexágono Research — Evidencia rigurosa para decisiones que importan">
+    <meta property="og:site_name" content="Hexágono Communication Intelligence">
+    <meta property="og:title" content="Hexágono Communication Intelligence — Evidencia rigurosa para decisiones que importan">
     <meta property="og:description" content="Estudios pre-test y post-test de campañas de comunicación social, investigación de opinión pública y consultoría de datos para instituciones de gobierno.">
     <meta property="og:url" content="{{ url('/') }}">
     <meta name="twitter:card" content="summary">
@@ -43,9 +43,12 @@
     {{-- ============================== HEADER ============================== --}}
     <header id="site-header" class="fixed inset-x-0 top-0 z-50">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
-            <a href="#inicio" class="flex items-center gap-2.5">
-                <x-app-hexagon-mark class="h-6 w-6 text-electric" />
-                <span class="text-sm font-semibold tracking-[0.2em] text-white">HEXÁGONO RESEARCH</span>
+            <a href="#inicio" class="flex items-center gap-3">
+                <img src="{{ asset('logo-ci.png') }}" alt="Hexágono Communication Intelligence" width="251" height="192" class="h-8 w-auto">
+                <span class="flex flex-col leading-tight">
+                    <span class="text-sm font-semibold tracking-[0.2em] text-white">HEXÁGONO</span>
+                    <span class="text-[10px] font-medium tracking-[0.25em] text-electric">COMMUNICATION INTELLIGENCE</span>
+                </span>
             </a>
 
             <nav aria-label="Navegación principal" class="hidden items-center gap-10 text-sm text-zinc-300 md:flex">
@@ -135,22 +138,32 @@
                     </h2>
                 </div>
 
-                <div class="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-2">
+                <div class="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ([
                         [
                             'title' => 'Estudios pre-test de campañas',
-                            'description' => 'Evaluamos conceptos, mensajes y piezas antes de su difusión: comprensión, recordación potencial y reacción de las audiencias objetivo.',
+                            'description' => 'Evaluamos conceptos, mensajes y piezas antes de su difusión: atención, comprensión, credibilidad, relevancia y motivación a la acción de las audiencias objetivo.',
                             'icon' => 'eye',
                         ],
                         [
                             'title' => 'Estudios post-test / evaluación de impacto',
-                            'description' => 'Medimos alcance, recordación, comprensión del mensaje y cambios de percepción una vez concluida la campaña.',
+                            'description' => 'Medimos exposición, recordación, comprensión, atribución y cumplimiento de objetivos una vez concluida la campaña.',
                             'icon' => 'chart',
                         ],
                         [
                             'title' => 'Investigación de opinión pública',
-                            'description' => 'Encuestas y estudios cualitativos para entender percepciones, prioridades y niveles de confianza ciudadana.',
+                            'description' => 'Encuestas y estudios cualitativos —grupos de enfoque, entrevistas a profundidad, etnografías— para entender percepciones, prioridades y niveles de confianza ciudadana.',
                             'icon' => 'chat',
+                        ],
+                        [
+                            'title' => 'Inteligencia de audiencias',
+                            'description' => 'Segmentación, perfiles y líneas base de comunicación para identificar a quién dirigirse y con qué mensaje antes de invertir en una campaña.',
+                            'icon' => 'users',
+                        ],
+                        [
+                            'title' => 'Análisis e inteligencia digital',
+                            'description' => 'Escucha social, análisis de redes y comunidades, y seguimiento del clima digital para entender cómo se mueve una conversación en línea.',
+                            'icon' => 'network',
                         ],
                         [
                             'title' => 'Consultoría en comunicación social y análisis de datos',
@@ -196,6 +209,43 @@
                         </li>
                     @endforeach
                 </ol>
+
+                {{-- Dos preguntas guían cada estudio: pre-test y post-test --}}
+                <div class="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <div class="reveal rounded-sm border border-white/10 bg-ink p-8">
+                        <span class="inline-flex rounded-full border border-white/15 px-3 py-1 text-xs font-medium tracking-wide text-zinc-300">
+                            PRE TEST
+                        </span>
+                        <h3 class="mt-5 text-xl font-semibold text-white">¿Está lista para salir?</h3>
+                        <ul class="mt-5 space-y-2 text-sm text-zinc-400">
+                            <li>Comprensión del mensaje</li>
+                            <li>Impacto y aceptación</li>
+                            <li>Credibilidad y relevancia</li>
+                            <li>Atribución y riesgos</li>
+                        </ul>
+                    </div>
+                    <div class="reveal rounded-sm border border-white/10 bg-ink p-8" style="transition-delay: 75ms">
+                        <span class="inline-flex rounded-full border border-electric/40 px-3 py-1 text-xs font-medium tracking-wide text-electric">
+                            POST TEST
+                        </span>
+                        <h3 class="mt-5 text-xl font-semibold text-white">¿Funcionó?</h3>
+                        <ul class="mt-5 space-y-2 text-sm text-zinc-400">
+                            <li>Exposición y recordación</li>
+                            <li>Comprensión y atribución</li>
+                            <li>Credibilidad y relevancia</li>
+                            <li>Objetivos y metas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                {{-- Técnicas y herramientas de investigación disponibles --}}
+                <div class="reveal mt-12 flex flex-wrap gap-3">
+                    @foreach (['Cualitativa', 'Cuantitativa', 'Digital', 'Desk research', 'Ciencias del comportamiento'] as $technique)
+                        <span class="rounded-full border border-white/10 px-4 py-1.5 text-xs font-medium text-zinc-300">
+                            {{ $technique }}
+                        </span>
+                    @endforeach
+                </div>
             </div>
         </section>
 
@@ -352,21 +402,24 @@
     <footer class="border-t border-white/10 py-12">
         <div class="mx-auto flex max-w-7xl flex-col gap-8 px-6 sm:flex-row sm:items-center sm:justify-between lg:px-8">
             <div class="flex items-center gap-2.5">
-                <x-app-hexagon-mark class="h-5 w-5 text-electric" />
-                <span class="text-xs font-medium tracking-[0.2em] text-zinc-400">HEXÁGONO RESEARCH</span>
+                <img src="{{ asset('logo-ci.png') }}" alt="Hexágono Communication Intelligence" width="251" height="192" class="h-6 w-auto">
+                <span class="flex flex-col leading-tight">
+                    <span class="text-xs font-medium tracking-[0.2em] text-zinc-400">HEXÁGONO</span>
+                    <span class="text-[9px] font-medium tracking-[0.2em] text-zinc-500">COMMUNICATION INTELLIGENCE</span>
+                </span>
             </div>
 
             <nav aria-label="Redes sociales" class="flex items-center gap-5 text-zinc-500">
-                <a href="#" class="hover:text-white" aria-label="LinkedIn de Hexágono Research">
+                <a href="#" class="hover:text-white" aria-label="LinkedIn de Hexágono Communication Intelligence">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V21h-4V9Z"/></svg>
                 </a>
-                <a href="#" class="hover:text-white" aria-label="X (Twitter) de Hexágono Research">
+                <a href="#" class="hover:text-white" aria-label="X (Twitter) de Hexágono Communication Intelligence">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 3H21l-6.56 7.5L22 21h-6.13l-4.8-6.28L5.6 21H3.5l7-8L2 3h6.28l4.34 5.74L18.9 3Zm-1.07 16h1.17L7.14 4.86H5.9L17.83 19Z"/></svg>
                 </a>
             </nav>
 
             <p class="text-xs text-zinc-500">
-                © {{ now()->year }} Hexágono Research. Todos los derechos reservados.
+                © {{ now()->year }} Hexágono Communication Intelligence. Todos los derechos reservados.
                 <a href="#" class="underline-draw ml-1 hover:text-zinc-300">Aviso de privacidad</a>
             </p>
         </div>
