@@ -7,7 +7,7 @@ it('renders the landing page with the contact form', function () {
     $response = $this->get(route('home'));
 
     $response->assertOk();
-    $response->assertSee('Hexágono Research');
+    $response->assertSee('Hexágono Communication Intelligence');
     $response->assertSee(route('contact.store'), escape: false);
 });
 

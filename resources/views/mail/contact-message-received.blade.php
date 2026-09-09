@@ -14,7 +14,7 @@
                 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden;">
                     <tr>
                         <td style="background:#0a0a0a; padding:20px 28px;">
-                            <span style="color:#ffffff; font-size:14px; letter-spacing:0.1em; text-transform:uppercase;">Hexágono Research</span>
+                            <span style="color:#ffffff; font-size:14px; letter-spacing:0.1em; text-transform:uppercase;">Hexágono Communication Intelligence</span>
                         </td>
                     </tr>
                     <tr>
