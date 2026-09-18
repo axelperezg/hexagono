@@ -5,3 +5,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | app/{Models,Livewire,Http/Middleware}/** | .ai/rules/middleware.md |
+| app/Http/Requests/** | .ai/rules/requests.md |

@@ -19,6 +19,7 @@ it('stores a valid contact message and redirects back with a success message', f
         'phone' => '5555555555',
         'study_type' => StudyType::Pretest->value,
         'message' => 'Nos interesa un estudio pre-test para nuestra próxima campaña.',
+        'rendered_at' => encrypt(now()->subSeconds(10)->timestamp),
     ];
 
     $response = $this->from(route('home'))->post(route('contact.store'), $payload);
@@ -39,6 +40,7 @@ it('stores a valid contact message and returns json when the request expects jso
         'email' => 'luis.perez@example.com',
         'study_type' => StudyType::Opinion->value,
         'message' => 'Quisiéramos cotizar un estudio de opinión pública.',
+        'rendered_at' => encrypt(now()->subSeconds(10)->timestamp),
     ];
 
     $response = $this->postJson(route('contact.store'), $payload);
@@ -99,5 +101,69 @@ it('rejects a message over the maximum length', function () {
 it('does not persist a message when validation fails', function () {
     $this->postJson(route('contact.store'), ['name' => 'Ana Torres']);
 
+    expect(ContactMessage::count())->toBe(0);
+});
+
+it('silently discards a submission with the honeypot field filled', function () {
+    $payload = [
+        'name' => 'Bot Spammer',
+        'email' => 'bot@example.com',
+        'study_type' => StudyType::Otro->value,
+        'message' => 'Mensaje automatizado.',
+        'rendered_at' => encrypt(now()->subSeconds(10)->timestamp),
+        'website' => 'https://spam.example.com',
+    ];
+
+    $response = $this->postJson(route('contact.store'), $payload);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect(ContactMessage::count())->toBe(0);
+});
+
+it('silently discards a submission sent faster than a human could fill the form', function () {
+    $payload = [
+        'name' => 'Bot Spammer',
+        'email' => 'bot@example.com',
+        'study_type' => StudyType::Otro->value,
+        'message' => 'Mensaje automatizado.',
+        'rendered_at' => encrypt(now()->timestamp),
+    ];
+
+    $response = $this->postJson(route('contact.store'), $payload);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect(ContactMessage::count())->toBe(0);
+});
+
+it('silently discards a submission missing the render timestamp', function () {
+    $payload = [
+        'name' => 'Bot Spammer',
+        'email' => 'bot@example.com',
+        'study_type' => StudyType::Otro->value,
+        'message' => 'Mensaje automatizado.',
+    ];
+
+    $response = $this->postJson(route('contact.store'), $payload);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
+    expect(ContactMessage::count())->toBe(0);
+});
+
+it('silently discards a submission with a tampered render timestamp', function () {
+    $payload = [
+        'name' => 'Bot Spammer',
+        'email' => 'bot@example.com',
+        'study_type' => StudyType::Otro->value,
+        'message' => 'Mensaje automatizado.',
+        'rendered_at' => 'not-a-valid-encrypted-value',
+    ];
+
+    $response = $this->postJson(route('contact.store'), $payload);
+
+    $response->assertOk();
+    $response->assertJson(['success' => true]);
     expect(ContactMessage::count())->toBe(0);
 });
