@@ -333,6 +333,22 @@
                         <form id="contact-form" method="POST" action="{{ route('contact.store') }}" class="rounded-sm border border-white/10 bg-panel p-6 sm:p-8" novalidate>
                             @csrf
 
+                            {{--
+                                Anti-spam signals, checked by
+                                StoreContactMessageRequest::looksLikeSpam():
+                                a honeypot field real visitors never see or
+                                fill, and an encrypted render timestamp
+                                proving the page was actually loaded (a bot
+                                posting straight to /contacto has neither).
+                                A tripped submission gets the normal success
+                                response but is never persisted.
+                            --}}
+                            <div class="absolute -left-[9999px] top-auto" aria-hidden="true">
+                                <label for="website">Sitio web</label>
+                                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                            </div>
+                            <input type="hidden" name="rendered_at" value="{{ encrypt(now()->timestamp) }}">
+
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <x-contact-field name="name" label="Nombre completo" required autocomplete="name" />
                                 <x-contact-field name="institution" label="Institución / Dependencia" autocomplete="organization" />

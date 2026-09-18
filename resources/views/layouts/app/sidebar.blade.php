@@ -19,6 +19,12 @@
                     <flux:sidebar.item icon="envelope" :href="route('contact-messages.index')" :current="request()->routeIs('contact-messages.index')" wire:navigate>
                         {{ __('Mensajes de contacto') }}
                     </flux:sidebar.item>
+
+                    @if (auth()->user()->isAdmin())
+                        <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>
+                            {{ __('Usuarios') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

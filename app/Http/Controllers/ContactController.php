@@ -21,16 +21,22 @@ class ContactController extends Controller
      */
     public function store(StoreContactMessageRequest $request): RedirectResponse|JsonResponse
     {
-        $contactMessage = ContactMessage::create($request->validated());
+        // A spam submission (see StoreContactMessageRequest::looksLikeSpam())
+        // gets the same success response as a real one below, but is never
+        // persisted or emailed — so an automated sender has no signal
+        // telling it the message was discarded.
+        if (! $request->looksLikeSpam()) {
+            $contactMessage = ContactMessage::create($request->validated());
 
-        // Notify the internal team by email. Uncomment once outbound mail
-        // is configured (see .env: MAIL_MAILER, MAIL_HOST, MAIL_TO_ADDRESS).
-        // This project ships with MAIL_MAILER=smtp pointed at a local
-        // Mailpit-style catcher, so it is safe to enable in development.
-        //
-        // Mail::to(config('mail.to_address'))->send(
-        //     new ContactMessageReceived($contactMessage)
-        // );
+            // Notify the internal team by email. Uncomment once outbound mail
+            // is configured (see .env: MAIL_MAILER, MAIL_HOST, MAIL_TO_ADDRESS).
+            // This project ships with MAIL_MAILER=smtp pointed at a local
+            // Mailpit-style catcher, so it is safe to enable in development.
+            //
+            // Mail::to(config('mail.to_address'))->send(
+            //     new ContactMessageReceived($contactMessage)
+            // );
+        }
 
         $message = 'Gracias por contactarnos. Nuestro equipo revisará tu solicitud y te responderá a la brevedad.';
 
