@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ContactController;
 use App\Livewire\ContactMessages\Index as ContactMessagesIndex;
+use App\Livewire\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -14,6 +15,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Internal inbox for messages submitted through the public contact form.
     Route::livewire('mensajes-contacto', ContactMessagesIndex::class)->name('contact-messages.index');
+
+    // Admin module to manage user accounts (App\Enums\UserRole::Admin only).
+    Route::livewire('usuarios', UsersIndex::class)->name('users.index')->middleware('admin');
 });
 
 require __DIR__.'/settings.php';
