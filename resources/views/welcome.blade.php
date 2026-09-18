@@ -309,11 +309,7 @@
                         <dl class="mt-10 space-y-4 text-sm text-zinc-400">
                             <div class="flex items-center gap-3">
                                 <dt class="sr-only">Correo</dt>
-                                <dd><a href="mailto:contacto@hexagonoresearch.mx" class="underline-draw text-zinc-300 hover:text-white">contacto@hexagonoresearch.mx</a></dd>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <dt class="sr-only">Teléfono</dt>
-                                <dd>+52 (55) 0000 0000</dd>
+                                <dd><a href="mailto:comercial@hexagono-ci.com" class="underline-draw text-zinc-300 hover:text-white">comercial@hexagono-ci.com</a></dd>
                             </div>
                             <div class="flex items-center gap-3">
                                 <dt class="sr-only">Ubicación</dt>
