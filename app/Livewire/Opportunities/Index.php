@@ -5,11 +5,13 @@ namespace App\Livewire\Opportunities;
 use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\PipelineStage;
+use App\Models\Tag;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -63,6 +65,16 @@ class Index extends Component
     public string $notes = '';
 
     /**
+     * @var array<int, string>
+     */
+    public array $tagIds = [];
+
+    public string $newTags = '';
+
+    #[Url(as: 'etiqueta', history: true)]
+    public string $tagFilter = '';
+
+    /**
      * Reset to the first page whenever a filter changes.
      */
     public function updatingSearch(): void
@@ -71,6 +83,11 @@ class Index extends Component
     }
 
     public function updatingStageFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTagFilter(): void
     {
         $this->resetPage();
     }
@@ -103,6 +120,7 @@ class Index extends Component
         $this->currency = $opportunity->currency;
         $this->expected_close_date = (string) $opportunity->expected_close_date?->format('Y-m-d');
         $this->notes = (string) $opportunity->notes;
+        $this->tagIds = $opportunity->tags()->pluck('tags.id')->map(fn (int $id) => (string) $id)->all();
 
         Flux::modal('opportunity-form')->show();
     }
@@ -115,17 +133,24 @@ class Index extends Component
     {
         $validated = $this->validate($this->rules());
 
-        $attributes = array_map(fn (?string $value) => $value === '' ? null : $value, $validated);
+        $tagIds = Tag::resolveIds($validated['tagIds'], $validated['newTags']);
+        $attributes = array_map(
+            fn (?string $value) => $value === '' ? null : $value,
+            Arr::except($validated, ['tagIds', 'newTags']),
+        );
 
         if ($this->editingOpportunityId) {
-            Opportunity::findOrFail($this->editingOpportunityId)->update($attributes);
+            $opportunity = Opportunity::findOrFail($this->editingOpportunityId);
+            $opportunity->update($attributes);
 
             Flux::toast(variant: 'success', text: __('Oportunidad actualizada.'));
         } else {
-            Opportunity::create($attributes);
+            $opportunity = Opportunity::create($attributes);
 
             Flux::toast(variant: 'success', text: __('Oportunidad creada.'));
         }
+
+        $opportunity->tags()->sync($tagIds);
 
         Flux::modal('opportunity-form')->close();
 
@@ -193,6 +218,17 @@ class Index extends Component
         return User::orderBy('name')->get(['id', 'name']);
     }
 
+    /**
+     * Tags offered in the form and in the filter.
+     *
+     * @return Collection<int, Tag>
+     */
+    #[Computed]
+    public function availableTags(): Collection
+    {
+        return Tag::orderBy('name')->get();
+    }
+
     public function render(): View
     {
         return view('livewire.opportunities.index', [
@@ -206,11 +242,15 @@ class Index extends Component
     private function opportunities(): LengthAwarePaginator
     {
         return Opportunity::query()
-            ->with(['organization', 'stage', 'owner'])
+            ->with(['organization', 'stage', 'owner', 'tags'])
             ->whereHas('organization')
             ->when(
                 $this->stageFilter !== '',
                 fn ($query) => $query->where('pipeline_stage_id', $this->stageFilter)
+            )
+            ->when(
+                $this->tagFilter !== '',
+                fn ($query) => $query->whereHas('tags', fn ($query) => $query->whereKey($this->tagFilter))
             )
             ->when(
                 $this->search !== '',
@@ -238,6 +278,9 @@ class Index extends Component
             'currency' => ['required', Rule::in(self::CURRENCIES)],
             'expected_close_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'tagIds' => ['array'],
+            'tagIds.*' => [Rule::exists('tags', 'id')],
+            'newTags' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -246,7 +289,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes']);
+        $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes', 'tagIds', 'newTags']);
         $this->currency = self::CURRENCIES[0];
         $this->user_id = (string) Auth::id();
         $this->pipeline_stage_id = (string) $this->stages()->first()?->id;

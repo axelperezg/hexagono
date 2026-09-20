@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTags;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTags, SoftDeletes;
 
     /**
      * @return HasMany<Contact, $this>

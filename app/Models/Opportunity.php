@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTags;
 use Database\Factories\OpportunityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * An approach to an organization with business potential.
@@ -31,7 +33,22 @@ use Illuminate\Support\Carbon;
 class Opportunity extends Model
 {
     /** @use HasFactory<OpportunityFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTags, SoftDeletes;
+
+    /**
+     * Record the pipeline stage history: the initial stage on creation and
+     * every later stage change, attributed to the authenticated user.
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (Opportunity $opportunity) => $opportunity->recordStageChange(null));
+
+        static::updated(function (Opportunity $opportunity) {
+            if ($opportunity->wasChanged('pipeline_stage_id')) {
+                $opportunity->recordStageChange((int) $opportunity->getOriginal('pipeline_stage_id'));
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -78,5 +95,30 @@ class Opportunity extends Model
     public function interactions(): HasMany
     {
         return $this->hasMany(Interaction::class);
+    }
+
+    /**
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * @return HasMany<OpportunityStageChange, $this>
+     */
+    public function stageChanges(): HasMany
+    {
+        return $this->hasMany(OpportunityStageChange::class);
+    }
+
+    private function recordStageChange(?int $fromStageId): void
+    {
+        $this->stageChanges()->create([
+            'from_stage_id' => $fromStageId,
+            'to_stage_id' => $this->pipeline_stage_id,
+            'user_id' => Auth::id(),
+        ]);
     }
 }

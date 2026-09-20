@@ -14,13 +14,19 @@
         </flux:button>
     </div>
 
-    <div class="mb-4">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row">
         <flux:input
             wire:model.live.debounce.400ms="search"
             icon="magnifying-glass"
             placeholder="{{ __('Buscar por nombre o sector') }}"
             class="sm:max-w-xs"
         />
+        <flux:select wire:model.live="tagFilter" class="sm:max-w-48" aria-label="{{ __('Etiqueta') }}">
+            <flux:select.option value="">{{ __('Todas las etiquetas') }}</flux:select.option>
+            @foreach ($this->availableTags as $tag)
+                <flux:select.option value="{{ $tag->id }}">{{ $tag->name }}</flux:select.option>
+            @endforeach
+        </flux:select>
     </div>
 
     @if ($organizations->isEmpty())
@@ -40,6 +46,13 @@
                         <flux:table.cell>
                             <div class="font-medium text-zinc-800 dark:text-white">{{ $organization->name }}</div>
                             <div class="text-zinc-500">{{ $organization->sector }}</div>
+                            @if ($organization->tags->isNotEmpty())
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    @foreach ($organization->tags as $tag)
+                                        <flux:badge size="sm" color="blue">{{ $tag->name }}</flux:badge>
+                                    @endforeach
+                                </div>
+                            @endif
                         </flux:table.cell>
                         <flux:table.cell>{{ $organization->contacts_count }}</flux:table.cell>
                         <flux:table.cell>{{ $organization->opportunities_count }}</flux:table.cell>
@@ -96,6 +109,21 @@
                 <flux:label>{{ __('Notas') }}</flux:label>
                 <flux:textarea wire:model="notes" rows="3" />
                 <flux:error name="notes" />
+            </flux:field>
+
+            @if ($this->availableTags->isNotEmpty())
+                <flux:checkbox.group wire:model="tagIds" label="{{ __('Etiquetas') }}">
+                    @foreach ($this->availableTags as $tag)
+                        <flux:checkbox value="{{ $tag->id }}" label="{{ $tag->name }}" />
+                    @endforeach
+                </flux:checkbox.group>
+                <flux:error name="tagIds.*" />
+            @endif
+
+            <flux:field>
+                <flux:label>{{ __('Nuevas etiquetas') }}</flux:label>
+                <flux:input wire:model="newTags" placeholder="{{ __('Sepáralas con comas') }}" />
+                <flux:error name="newTags" />
             </flux:field>
 
             <div class="flex justify-end space-x-2 rtl:space-x-reverse">
