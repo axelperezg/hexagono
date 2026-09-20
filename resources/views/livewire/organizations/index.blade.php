@@ -47,7 +47,7 @@
                             <div class="flex items-start gap-3">
                                 <flux:avatar
                                     size="sm"
-                                    :src="$organization->logo_url"
+                                    :src="$organization->logoUrl()"
                                     :name="$organization->name"
                                     alt="{{ __('Logo de :name', ['name' => $organization->name]) }}"
                                 />
@@ -108,8 +108,8 @@
                 <div class="flex items-center gap-4">
                     @if ($logo?->isPreviewable())
                         <flux:avatar size="lg" :src="$logo->temporaryUrl()" alt="{{ __('Vista previa del logo') }}" />
-                    @elseif (! $logo && $this->editingOrganization?->logo_url && ! $removeLogo)
-                        <flux:avatar size="lg" :src="$this->editingOrganization->logo_url" alt="{{ __('Logo actual') }}" />
+                    @elseif (! $logo && $this->editingOrganization?->logoUrl() && ! $removeLogo)
+                        <flux:avatar size="lg" :src="$this->editingOrganization->logoUrl()" alt="{{ __('Logo actual') }}" />
                     @endif
 
                     <flux:input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp" />

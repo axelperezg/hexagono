@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Concerns\HasTags;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +20,6 @@ use Illuminate\Support\Facades\Storage;
  * @property string $name
  * @property string|null $acronym
  * @property string|null $logo_path
- * @property-read string|null $logo_url
  * @property int|null $sector_id
  * @property string|null $website
  * @property string|null $phone
@@ -38,12 +36,10 @@ class Organization extends Model
 
     /**
      * Public URL of the uploaded logo, null when the organization has none.
-     *
-     * @return Attribute<string|null, never>
      */
-    protected function logoUrl(): Attribute
+    public function logoUrl(): ?string
     {
-        return Attribute::get(fn () => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null);
+        return $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null;
     }
 
     /**

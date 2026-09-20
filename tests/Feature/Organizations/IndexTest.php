@@ -146,7 +146,7 @@ test('a user can upload a logo for an organization', function () {
     $organization = Organization::firstWhere('name', 'Secretaría de Salud');
 
     expect($organization->logo_path)->toStartWith('organization-logos/')
-        ->and($organization->logo_url)->not->toBeNull();
+        ->and($organization->logoUrl())->not->toBeNull();
     Storage::disk('public')->assertExists($organization->logo_path);
 });
 
