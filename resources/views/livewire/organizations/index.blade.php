@@ -44,6 +44,14 @@
                 @foreach ($organizations as $organization)
                     <flux:table.row :key="$organization->id">
                         <flux:table.cell>
+                            <div class="flex items-start gap-3">
+                                <flux:avatar
+                                    size="sm"
+                                    :src="$organization->logo_url"
+                                    :name="$organization->name"
+                                    alt="{{ __('Logo de :name', ['name' => $organization->name]) }}"
+                                />
+                                <div>
                             <div class="font-medium text-zinc-800 dark:text-white">
                                 {{ $organization->name }}
                                 @if ($organization->acronym)
@@ -58,6 +66,8 @@
                                     @endforeach
                                 </div>
                             @endif
+                                </div>
+                            </div>
                         </flux:table.cell>
                         <flux:table.cell>{{ $organization->contacts_count }}</flux:table.cell>
                         <flux:table.cell>{{ $organization->opportunities_count }}</flux:table.cell>
@@ -90,6 +100,30 @@
                 <flux:label>{{ __('Nombre') }}</flux:label>
                 <flux:input wire:model="name" />
                 <flux:error name="name" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Logo') }}</flux:label>
+
+                <div class="flex items-center gap-4">
+                    @if ($logo?->isPreviewable())
+                        <flux:avatar size="lg" :src="$logo->temporaryUrl()" alt="{{ __('Vista previa del logo') }}" />
+                    @elseif (! $logo && $this->editingOrganization?->logo_url && ! $removeLogo)
+                        <flux:avatar size="lg" :src="$this->editingOrganization->logo_url" alt="{{ __('Logo actual') }}" />
+                    @endif
+
+                    <flux:input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp" />
+                </div>
+
+                <flux:description>{{ __('PNG, JPG o WebP de hasta 2 MB.') }}</flux:description>
+                <flux:error name="logo" />
+
+                @if ($this->editingOrganization?->logo_path && ! $logo)
+                    <flux:field variant="inline" class="mt-2">
+                        <flux:checkbox wire:model.live="removeLogo" />
+                        <flux:label>{{ __('Quitar el logo actual') }}</flux:label>
+                    </flux:field>
+                @endif
             </flux:field>
 
             <flux:field>
