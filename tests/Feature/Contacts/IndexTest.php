@@ -45,6 +45,42 @@ test('a user can create a contact', function () {
     ]);
 });
 
+test('a contact stores an address and a maps url', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createContact')
+        ->set('organization_id', (string) $organization->id)
+        ->set('name', 'Ana Torres')
+        ->set('address', 'Av. Reforma 100, CDMX')
+        ->set('maps_url', 'https://maps.app.goo.gl/abc123')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('contacts', [
+        'name' => 'Ana Torres',
+        'address' => 'Av. Reforma 100, CDMX',
+        'maps_url' => 'https://maps.app.goo.gl/abc123',
+    ]);
+});
+
+test('the maps url must be an http or https url', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create();
+
+    $component = Livewire::test(Index::class)
+        ->call('createContact')
+        ->set('organization_id', (string) $organization->id)
+        ->set('name', 'Ana Torres');
+
+    foreach (['not a url', 'javascript://%0Aalert(1)', 'ftp://example.com/map'] as $invalid) {
+        $component->set('maps_url', $invalid)->call('save')->assertHasErrors(['maps_url']);
+    }
+
+    $component->set('maps_url', '')->call('save')->assertHasNoErrors();
+});
+
 test('the contact requires a name and an existing organization', function () {
     $this->actingAs(User::factory()->create());
 

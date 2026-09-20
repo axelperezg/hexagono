@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Organization;
+use App\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,7 +20,8 @@ class OrganizationFactory extends Factory
     {
         return [
             'name' => fake()->unique()->company(),
-            'sector' => fake()->randomElement(['Gobierno', 'Educación', 'Salud', 'Consultoría', 'Medios']),
+            'acronym' => fake()->lexify('???'),
+            'sector_id' => Sector::factory(),
             'website' => fake()->url(),
             'phone' => fake()->numerify('55########'),
             'notes' => fake()->sentence(),

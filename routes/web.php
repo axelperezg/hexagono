@@ -7,6 +7,7 @@ use App\Livewire\Opportunities\Board as OpportunitiesBoard;
 use App\Livewire\Opportunities\Index as OpportunitiesIndex;
 use App\Livewire\Opportunities\Show as OpportunitiesShow;
 use App\Livewire\Organizations\Index as OrganizationsIndex;
+use App\Livewire\Sectors\Index as SectorsIndex;
 use App\Livewire\Tasks\Index as TasksIndex;
 use App\Livewire\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // opportunities with a logged interactions timeline. Any authenticated
     // user can manage them; only admins can delete records.
     Route::livewire('organizaciones', OrganizationsIndex::class)->name('organizations.index');
+    Route::livewire('sectores', SectorsIndex::class)->name('sectors.index');
     Route::livewire('contactos', ContactsIndex::class)->name('contacts.index');
     Route::livewire('oportunidades', OpportunitiesIndex::class)->name('opportunities.index');
     // Must be declared before the {opportunity} wildcard below.

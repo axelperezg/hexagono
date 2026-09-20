@@ -18,7 +18,7 @@
         <flux:input
             wire:model.live.debounce.400ms="search"
             icon="magnifying-glass"
-            placeholder="{{ __('Buscar por nombre o sector') }}"
+            placeholder="{{ __('Buscar por nombre, acrónimo o sector') }}"
             class="sm:max-w-xs"
         />
         <flux:select wire:model.live="tagFilter" class="sm:max-w-48" aria-label="{{ __('Etiqueta') }}">
@@ -44,8 +44,21 @@
                 @foreach ($organizations as $organization)
                     <flux:table.row :key="$organization->id">
                         <flux:table.cell>
-                            <div class="font-medium text-zinc-800 dark:text-white">{{ $organization->name }}</div>
-                            <div class="text-zinc-500">{{ $organization->sector }}</div>
+                            <div class="flex items-start gap-3">
+                                <flux:avatar
+                                    size="sm"
+                                    :src="$organization->logoUrl()"
+                                    :name="$organization->name"
+                                    alt="{{ __('Logo de :name', ['name' => $organization->name]) }}"
+                                />
+                                <div>
+                            <div class="font-medium text-zinc-800 dark:text-white">
+                                {{ $organization->name }}
+                                @if ($organization->acronym)
+                                    <span class="font-normal text-zinc-500">({{ $organization->acronym }})</span>
+                                @endif
+                            </div>
+                            <div class="text-zinc-500">{{ $organization->sector?->name }}</div>
                             @if ($organization->tags->isNotEmpty())
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     @foreach ($organization->tags as $tag)
@@ -53,6 +66,8 @@
                                     @endforeach
                                 </div>
                             @endif
+                                </div>
+                            </div>
                         </flux:table.cell>
                         <flux:table.cell>{{ $organization->contacts_count }}</flux:table.cell>
                         <flux:table.cell>{{ $organization->opportunities_count }}</flux:table.cell>
@@ -88,9 +103,44 @@
             </flux:field>
 
             <flux:field>
+                <flux:label>{{ __('Logo') }}</flux:label>
+
+                <div class="flex items-center gap-4">
+                    @if ($logo?->isPreviewable())
+                        <flux:avatar size="lg" :src="$logo->temporaryUrl()" alt="{{ __('Vista previa del logo') }}" />
+                    @elseif (! $logo && $this->editingOrganization?->logoUrl() && ! $removeLogo)
+                        <flux:avatar size="lg" :src="$this->editingOrganization->logoUrl()" alt="{{ __('Logo actual') }}" />
+                    @endif
+
+                    <flux:input type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp" />
+                </div>
+
+                <flux:description>{{ __('PNG, JPG o WebP de hasta 2 MB.') }}</flux:description>
+                <flux:error name="logo" />
+
+                @if ($this->editingOrganization?->logo_path && ! $logo)
+                    <flux:field variant="inline" class="mt-2">
+                        <flux:checkbox wire:model.live="removeLogo" />
+                        <flux:label>{{ __('Quitar el logo actual') }}</flux:label>
+                    </flux:field>
+                @endif
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Acrónimo') }}</flux:label>
+                <flux:input wire:model="acronym" />
+                <flux:error name="acronym" />
+            </flux:field>
+
+            <flux:field>
                 <flux:label>{{ __('Sector') }}</flux:label>
-                <flux:input wire:model="sector" />
-                <flux:error name="sector" />
+                <flux:select wire:model="sectorId">
+                    <flux:select.option value="">{{ __('Sin sector') }}</flux:select.option>
+                    @foreach ($this->availableSectors as $sector)
+                        <flux:select.option value="{{ $sector->id }}">{{ $sector->name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="sectorId" />
             </flux:field>
 
             <flux:field>

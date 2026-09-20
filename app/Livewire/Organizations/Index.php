@@ -3,6 +3,7 @@
 namespace App\Livewire\Organizations;
 
 use App\Models\Organization;
+use App\Models\Sector;
 use App\Models\Tag;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -10,11 +11,14 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 /**
@@ -25,7 +29,7 @@ use Livewire\WithPagination;
 #[Title('Organizaciones')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithFileUploads, WithPagination;
 
     #[Url(as: 'buscar', history: true)]
     public string $search = '';
@@ -36,7 +40,13 @@ class Index extends Component
 
     public string $name = '';
 
-    public string $sector = '';
+    public string $acronym = '';
+
+    public string $sectorId = '';
+
+    public ?TemporaryUploadedFile $logo = null;
+
+    public bool $removeLogo = false;
 
     public string $website = '';
 
@@ -87,7 +97,8 @@ class Index extends Component
         $this->resetForm();
         $this->editingOrganizationId = $organization->id;
         $this->name = $organization->name;
-        $this->sector = (string) $organization->sector;
+        $this->acronym = (string) $organization->acronym;
+        $this->sectorId = (string) $organization->sector_id;
         $this->website = (string) $organization->website;
         $this->phone = (string) $organization->phone;
         $this->notes = (string) $organization->notes;
@@ -107,11 +118,20 @@ class Index extends Component
         $tagIds = Tag::resolveIds($validated['tagIds'], $validated['newTags']);
         $attributes = array_map(
             fn (?string $value) => $value === '' ? null : $value,
-            Arr::except($validated, ['tagIds', 'newTags']),
+            Arr::except($validated, ['tagIds', 'newTags', 'sectorId', 'logo']),
         );
+        $attributes['sector_id'] = $validated['sectorId'] === '' ? null : (int) $validated['sectorId'];
 
-        if ($this->editingOrganizationId) {
-            $organization = Organization::findOrFail($this->editingOrganizationId);
+        $organization = $this->editingOrganizationId ? Organization::findOrFail($this->editingOrganizationId) : null;
+        $previousLogoPath = $organization?->logo_path;
+
+        if ($this->logo) {
+            $attributes['logo_path'] = $this->logo->store('organization-logos', 'public');
+        } elseif ($this->removeLogo) {
+            $attributes['logo_path'] = null;
+        }
+
+        if ($organization) {
             $organization->update($attributes);
 
             Flux::toast(variant: 'success', text: __('Organización actualizada.'));
@@ -122,6 +142,10 @@ class Index extends Component
         }
 
         $organization->tags()->sync($tagIds);
+
+        if ($previousLogoPath && $previousLogoPath !== $organization->logo_path) {
+            Storage::disk('public')->delete($previousLogoPath);
+        }
 
         Flux::modal('organization-form')->close();
 
@@ -138,6 +162,12 @@ class Index extends Component
         $this->deletingOrganizationId = $organizationId;
 
         Flux::modal('confirm-organization-delete')->show();
+    }
+
+    #[Computed]
+    public function editingOrganization(): ?Organization
+    {
+        return $this->editingOrganizationId ? Organization::find($this->editingOrganizationId) : null;
     }
 
     #[Computed]
@@ -160,6 +190,17 @@ class Index extends Component
         Flux::modal('confirm-organization-delete')->close();
 
         $this->deletingOrganizationId = null;
+    }
+
+    /**
+     * Sectors offered in the form.
+     *
+     * @return Collection<int, Sector>
+     */
+    #[Computed]
+    public function availableSectors(): Collection
+    {
+        return Sector::orderBy('name')->get();
     }
 
     /**
@@ -186,7 +227,7 @@ class Index extends Component
     private function organizations(): LengthAwarePaginator
     {
         return Organization::query()
-            ->with('tags')
+            ->with(['tags', 'sector'])
             ->withCount(['contacts', 'opportunities'])
             ->when(
                 $this->tagFilter !== '',
@@ -197,7 +238,8 @@ class Index extends Component
                 fn ($query) => $query->where(
                     fn ($query) => $query
                         ->whereLike('name', "%{$this->search}%")
-                        ->orWhereLike('sector', "%{$this->search}%")
+                        ->orWhereLike('acronym', "%{$this->search}%")
+                        ->orWhereHas('sector', fn ($query) => $query->whereLike('name', "%{$this->search}%"))
                 )
             )
             ->orderBy('name')
@@ -211,7 +253,10 @@ class Index extends Component
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'sector' => ['nullable', 'string', 'max:255'],
+            'acronym' => ['nullable', 'string', 'max:50'],
+            // SVG is left out on purpose: it can carry scripts.
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'sectorId' => ['nullable', Rule::exists('sectors', 'id')],
             'website' => ['nullable', 'url', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:5000'],
@@ -226,7 +271,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingOrganizationId', 'name', 'sector', 'website', 'phone', 'notes', 'tagIds', 'newTags']);
+        $this->reset(['editingOrganizationId', 'name', 'acronym', 'sectorId', 'logo', 'removeLogo', 'website', 'phone', 'notes', 'tagIds', 'newTags']);
         $this->resetErrorBag();
     }
 }

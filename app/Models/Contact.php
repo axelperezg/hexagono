@@ -20,13 +20,15 @@ use Illuminate\Support\Carbon;
  * @property string|null $position
  * @property string|null $email
  * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $maps_url
  * @property bool $is_primary
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['organization_id', 'name', 'position', 'email', 'phone', 'is_primary', 'notes'])]
+#[Fillable(['organization_id', 'name', 'position', 'email', 'phone', 'address', 'maps_url', 'is_primary', 'notes'])]
 class Contact extends Model
 {
     /** @use HasFactory<ContactFactory> */
