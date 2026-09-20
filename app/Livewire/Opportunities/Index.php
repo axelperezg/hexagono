@@ -249,7 +249,7 @@ class Index extends Component
         $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes']);
         $this->currency = self::CURRENCIES[0];
         $this->user_id = (string) Auth::id();
-        $this->pipeline_stage_id = (string) $this->stages->first()?->id;
+        $this->pipeline_stage_id = (string) $this->stages()->first()?->id;
         $this->resetErrorBag();
     }
 }
