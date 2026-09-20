@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
  * @property int $id
  * @property int $organization_id
  * @property int $pipeline_stage_id
+ * @property int $board_position
  * @property int|null $user_id
  * @property string $title
  * @property string|null $estimated_amount

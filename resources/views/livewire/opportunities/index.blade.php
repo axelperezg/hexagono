@@ -9,9 +9,15 @@
             <flux:text class="mt-1">{{ __('Acercamientos con potencial de negocio y su etapa en el pipeline.') }}</flux:text>
         </div>
 
-        <flux:button variant="primary" icon="plus" wire:click="createOpportunity">
-            {{ __('Nueva oportunidad') }}
-        </flux:button>
+        <div class="flex gap-2">
+            <flux:button icon="view-columns" :href="route('opportunities.board')" wire:navigate>
+                {{ __('Ver tablero') }}
+            </flux:button>
+
+            <flux:button variant="primary" icon="plus" wire:click="createOpportunity">
+                {{ __('Nueva oportunidad') }}
+            </flux:button>
+        </div>
     </div>
 
     <div class="mb-4 flex flex-col gap-3 sm:flex-row">
