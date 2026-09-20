@@ -7,7 +7,9 @@ use App\Models\Interaction;
 use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\PipelineStage;
+use App\Models\Task;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\Rules\Enum;
 use Livewire\Livewire;
 
@@ -117,4 +119,89 @@ test('an admin can delete an interaction and a non-admin cannot', function () {
         ->call('deleteInteraction', $interaction->id);
 
     $this->assertModelMissing($interaction);
+});
+
+test('a user can add a task assigned to themselves by default', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $opportunity = Opportunity::factory()->create();
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])
+        ->call('createTask')
+        ->assertSet('task_user_id', (string) $user->id)
+        ->set('task_title', 'Enviar propuesta')
+        ->set('task_due_date', '2026-10-01')
+        ->call('saveTask')
+        ->assertHasNoErrors();
+
+    $task = $opportunity->tasks()->sole();
+
+    expect($task->title)->toBe('Enviar propuesta')
+        ->and($task->due_date->toDateString())->toBe('2026-10-01')
+        ->and($task->user_id)->toBe($user->id)
+        ->and($task->notes)->toBeNull();
+});
+
+test('a task requires a title and a due date', function () {
+    $this->actingAs(User::factory()->create());
+    $opportunity = Opportunity::factory()->create();
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])
+        ->call('createTask')
+        ->call('saveTask')
+        ->assertHasErrors(['task_title' => 'required', 'task_due_date' => 'required']);
+
+    expect($opportunity->tasks()->count())->toBe(0);
+});
+
+test('a user can edit, complete and reopen a task of the opportunity', function () {
+    $this->actingAs(User::factory()->create());
+    $opportunity = Opportunity::factory()->create();
+    $task = Task::factory()->for($opportunity)->create(['title' => 'Old title']);
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])
+        ->call('editTask', $task->id)
+        ->assertSet('task_title', 'Old title')
+        ->set('task_title', 'New title')
+        ->call('saveTask')
+        ->assertHasNoErrors()
+        ->call('toggleTask', $task->id);
+
+    expect($task->refresh()->title)->toBe('New title')
+        ->and($task->isCompleted())->toBeTrue();
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])->call('toggleTask', $task->id);
+
+    expect($task->refresh()->isCompleted())->toBeFalse();
+});
+
+test('tasks of another opportunity cannot be touched from this page', function () {
+    $this->actingAs(User::factory()->create());
+    $opportunity = Opportunity::factory()->create();
+    $foreignTask = Task::factory()->create();
+
+    expect(fn () => Livewire::test(Show::class, ['opportunity' => $opportunity])->call('toggleTask', $foreignTask->id))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect($foreignTask->refresh()->isCompleted())->toBeFalse();
+});
+
+test('an admin can delete a task and a non-admin cannot', function () {
+    $opportunity = Opportunity::factory()->create();
+    $task = Task::factory()->for($opportunity)->create();
+
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])
+        ->call('deleteTask', $task->id)
+        ->assertForbidden();
+
+    $this->assertModelExists($task);
+
+    $this->actingAs(User::factory()->admin()->create());
+
+    Livewire::test(Show::class, ['opportunity' => $opportunity])
+        ->call('deleteTask', $task->id);
+
+    $this->assertModelMissing($task);
 });

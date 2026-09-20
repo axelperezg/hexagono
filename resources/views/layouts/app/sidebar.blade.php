@@ -32,6 +32,10 @@
                         {{ __('Oportunidades') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('tasks.index')" :current="request()->routeIs('tasks.index')" wire:navigate>
+                        {{ __('Tareas') }}
+                    </flux:sidebar.item>
+
                     @if (auth()->user()->isAdmin())
                         <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>
                             {{ __('Usuarios') }}

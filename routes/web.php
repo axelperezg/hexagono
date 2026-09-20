@@ -6,6 +6,7 @@ use App\Livewire\Contacts\Index as ContactsIndex;
 use App\Livewire\Opportunities\Index as OpportunitiesIndex;
 use App\Livewire\Opportunities\Show as OpportunitiesShow;
 use App\Livewire\Organizations\Index as OrganizationsIndex;
+use App\Livewire\Tasks\Index as TasksIndex;
 use App\Livewire\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('contactos', ContactsIndex::class)->name('contacts.index');
     Route::livewire('oportunidades', OpportunitiesIndex::class)->name('opportunities.index');
     Route::livewire('oportunidades/{opportunity}', OpportunitiesShow::class)->name('opportunities.show');
+    Route::livewire('tareas', TasksIndex::class)->name('tasks.index');
 
     // Admin module to manage user accounts (App\Enums\UserRole::Admin only).
     Route::livewire('usuarios', UsersIndex::class)->name('users.index')->middleware('admin');

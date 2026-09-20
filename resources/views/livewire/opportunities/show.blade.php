@@ -1,7 +1,7 @@
 {{--
-    Opportunity detail page with the interactions timeline. Full-page
-    Livewire component, routed at /oportunidades/{opportunity}
-    (routes/web.php).
+    Opportunity detail page with its tasks, interactions timeline and stage
+    history. Full-page Livewire component, routed at
+    /oportunidades/{opportunity} (routes/web.php).
 --}}
 <section class="w-full">
     <div class="mb-2">
@@ -50,6 +50,71 @@
         @endif
     </dl>
 
+    @if ($opportunity->tags->isNotEmpty())
+        <div class="mb-6 flex flex-wrap gap-2">
+            @foreach ($opportunity->tags as $tag)
+                <flux:badge size="sm" color="blue">{{ $tag->name }}</flux:badge>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- Follow-up tasks --}}
+    <div class="mb-4 flex items-center justify-between">
+        <flux:heading size="lg">{{ __('Tareas') }}</flux:heading>
+
+        <flux:button icon="plus" wire:click="createTask">
+            {{ __('Nueva tarea') }}
+        </flux:button>
+    </div>
+
+    @if ($this->tasks->isEmpty())
+        <flux:callout class="mb-8" icon="clipboard-document-check" heading="{{ __('Sin tareas') }}" text="{{ __('Agenda el siguiente seguimiento de este acercamiento.') }}" />
+    @else
+        <ul class="mb-8 space-y-2">
+            @foreach ($this->tasks as $task)
+                <li wire:key="task-{{ $task->id }}" class="flex items-start justify-between gap-4 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                    <div class="flex items-start gap-3">
+                        <flux:checkbox
+                            :checked="$task->isCompleted()"
+                            wire:click="toggleTask({{ $task->id }})"
+                            aria-label="{{ __('Marcar como completada') }}"
+                        />
+                        <div>
+                            <div @class(['font-medium text-zinc-800 dark:text-white', 'line-through opacity-60' => $task->isCompleted()])>{{ $task->title }}</div>
+                            <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                                <span>{{ __('Vence') }} {{ $task->due_date->format('d/m/Y') }}</span>
+                                @if ($task->isOverdue())
+                                    <flux:badge size="sm" color="red">{{ __('Vencida') }}</flux:badge>
+                                @endif
+                                @if ($task->assignee)
+                                    <span>· {{ $task->assignee->name }}</span>
+                                @endif
+                            </div>
+                            @if ($task->notes)
+                                <p class="mt-1 whitespace-pre-line text-sm text-zinc-600 dark:text-zinc-300">{{ $task->notes }}</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex shrink-0 gap-1">
+                        <flux:button size="sm" variant="ghost" icon="pencil" wire:click="editTask({{ $task->id }})" aria-label="{{ __('Editar') }}" />
+                        @if (auth()->user()->isAdmin())
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                icon="trash"
+                                wire:click="deleteTask({{ $task->id }})"
+                                wire:confirm="{{ __('¿Eliminar esta tarea?') }}"
+                                aria-label="{{ __('Eliminar') }}"
+                            />
+                        @endif
+                    </div>
+                </li>
+            @endforeach
+        </ul>
+    @endif
+
+    {{-- Interactions --}}
     <div class="mb-4 flex items-center justify-between">
         <flux:heading size="lg">{{ __('Interacciones') }}</flux:heading>
 
@@ -106,6 +171,75 @@
             @endforeach
         </ul>
     @endif
+
+    {{-- Stage history --}}
+    <flux:heading size="lg" class="mb-4 mt-8">{{ __('Historial de etapas') }}</flux:heading>
+
+    <ol class="space-y-2 text-sm">
+        @foreach ($this->stageChanges as $change)
+            <li wire:key="stage-change-{{ $change->id }}" class="text-zinc-600 dark:text-zinc-300">
+                <span class="text-zinc-500">{{ $change->created_at->format('d/m/Y H:i') }}</span>
+                ·
+                @if ($change->fromStage)
+                    {{ $change->fromStage->name }} → <span class="font-medium text-zinc-800 dark:text-white">{{ $change->toStage->name }}</span>
+                @else
+                    {{ __('Creada en') }} <span class="font-medium text-zinc-800 dark:text-white">{{ $change->toStage->name }}</span>
+                @endif
+                @if ($change->user)
+                    <span class="text-zinc-500">· {{ $change->user->name }}</span>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+
+    {{-- Task form, opened by Show::createTask() / Show::editTask() --}}
+    <flux:modal name="task-form" class="w-full max-w-lg">
+        <form wire:submit="saveTask" class="space-y-6">
+            <flux:heading size="lg">
+                {{ $editingTaskId ? __('Editar tarea') : __('Nueva tarea') }}
+            </flux:heading>
+
+            <flux:field>
+                <flux:label>{{ __('Tarea') }}</flux:label>
+                <flux:input wire:model="task_title" autocomplete="off" />
+                <flux:error name="task_title" />
+            </flux:field>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <flux:field>
+                    <flux:label>{{ __('Fecha límite') }}</flux:label>
+                    <flux:input type="date" wire:model="task_due_date" />
+                    <flux:error name="task_due_date" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Responsable') }}</flux:label>
+                    <flux:select wire:model="task_user_id">
+                        @foreach ($this->users as $user)
+                            <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="task_user_id" />
+                </flux:field>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Notas') }}</flux:label>
+                <flux:textarea wire:model="task_notes" rows="3" />
+                <flux:error name="task_notes" />
+            </flux:field>
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="filled">{{ __('Cancelar') }}</flux:button>
+                </flux:modal.close>
+
+                <flux:button variant="primary" type="submit">
+                    {{ $editingTaskId ? __('Guardar cambios') : __('Crear tarea') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
     {{-- Log-interaction form, opened by Show::createInteraction() --}}
     <flux:modal name="interaction-form" class="w-full max-w-lg">

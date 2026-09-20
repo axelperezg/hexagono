@@ -3,10 +3,14 @@
 namespace App\Livewire\Organizations;
 
 use App\Models\Organization;
+use App\Models\Tag;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -41,9 +45,24 @@ class Index extends Component
     public string $notes = '';
 
     /**
+     * @var array<int, string>
+     */
+    public array $tagIds = [];
+
+    public string $newTags = '';
+
+    #[Url(as: 'etiqueta', history: true)]
+    public string $tagFilter = '';
+
+    /**
      * Reset to the first page whenever the search term changes.
      */
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTagFilter(): void
     {
         $this->resetPage();
     }
@@ -72,6 +91,7 @@ class Index extends Component
         $this->website = (string) $organization->website;
         $this->phone = (string) $organization->phone;
         $this->notes = (string) $organization->notes;
+        $this->tagIds = $organization->tags()->pluck('tags.id')->map(fn (int $id) => (string) $id)->all();
 
         Flux::modal('organization-form')->show();
     }
@@ -84,17 +104,24 @@ class Index extends Component
     {
         $validated = $this->validate($this->rules());
 
-        $attributes = array_map(fn (?string $value) => $value === '' ? null : $value, $validated);
+        $tagIds = Tag::resolveIds($validated['tagIds'], $validated['newTags']);
+        $attributes = array_map(
+            fn (?string $value) => $value === '' ? null : $value,
+            Arr::except($validated, ['tagIds', 'newTags']),
+        );
 
         if ($this->editingOrganizationId) {
-            Organization::findOrFail($this->editingOrganizationId)->update($attributes);
+            $organization = Organization::findOrFail($this->editingOrganizationId);
+            $organization->update($attributes);
 
             Flux::toast(variant: 'success', text: __('Organización actualizada.'));
         } else {
-            Organization::create($attributes);
+            $organization = Organization::create($attributes);
 
             Flux::toast(variant: 'success', text: __('Organización creada.'));
         }
+
+        $organization->tags()->sync($tagIds);
 
         Flux::modal('organization-form')->close();
 
@@ -135,6 +162,17 @@ class Index extends Component
         $this->deletingOrganizationId = null;
     }
 
+    /**
+     * Tags offered in the form and in the filter.
+     *
+     * @return Collection<int, Tag>
+     */
+    #[Computed]
+    public function availableTags(): Collection
+    {
+        return Tag::orderBy('name')->get();
+    }
+
     public function render(): View
     {
         return view('livewire.organizations.index', [
@@ -148,7 +186,12 @@ class Index extends Component
     private function organizations(): LengthAwarePaginator
     {
         return Organization::query()
+            ->with('tags')
             ->withCount(['contacts', 'opportunities'])
+            ->when(
+                $this->tagFilter !== '',
+                fn ($query) => $query->whereHas('tags', fn ($query) => $query->whereKey($this->tagFilter))
+            )
             ->when(
                 $this->search !== '',
                 fn ($query) => $query->where(
@@ -162,7 +205,7 @@ class Index extends Component
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     private function rules(): array
     {
@@ -172,6 +215,9 @@ class Index extends Component
             'website' => ['nullable', 'url', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'tagIds' => ['array'],
+            'tagIds.*' => [Rule::exists('tags', 'id')],
+            'newTags' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -180,7 +226,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingOrganizationId', 'name', 'sector', 'website', 'phone', 'notes']);
+        $this->reset(['editingOrganizationId', 'name', 'sector', 'website', 'phone', 'notes', 'tagIds', 'newTags']);
         $this->resetErrorBag();
     }
 }
