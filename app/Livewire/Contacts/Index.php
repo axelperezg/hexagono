@@ -44,6 +44,10 @@ class Index extends Component
 
     public string $phone = '';
 
+    public string $address = '';
+
+    public string $maps_url = '';
+
     public bool $is_primary = false;
 
     public string $notes = '';
@@ -80,6 +84,8 @@ class Index extends Component
         $this->position = (string) $contact->position;
         $this->email = (string) $contact->email;
         $this->phone = (string) $contact->phone;
+        $this->address = (string) $contact->address;
+        $this->maps_url = (string) $contact->maps_url;
         $this->is_primary = $contact->is_primary;
         $this->notes = (string) $contact->notes;
 
@@ -205,6 +211,9 @@ class Index extends Component
             'position' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:500'],
+            // Restricted to http(s) because the value is rendered as a link.
+            'maps_url' => ['nullable', 'url:http,https', 'max:2048'],
             'is_primary' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
@@ -215,7 +224,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingContactId', 'organization_id', 'name', 'position', 'email', 'phone', 'is_primary', 'notes']);
+        $this->reset(['editingContactId', 'organization_id', 'name', 'position', 'email', 'phone', 'address', 'maps_url', 'is_primary', 'notes']);
         $this->resetErrorBag();
     }
 }

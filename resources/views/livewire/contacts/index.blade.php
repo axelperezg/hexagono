@@ -49,7 +49,18 @@
                                 <a href="mailto:{{ $contact->email }}" class="text-blue-600 dark:text-blue-400">{{ $contact->email }}</a>
                             @endif
                         </flux:table.cell>
-                        <flux:table.cell>{{ $contact->organization->name }}</flux:table.cell>
+                        <flux:table.cell>
+                            {{ $contact->organization->name }}
+                            @if ($contact->address)
+                                <div class="text-zinc-500">{{ $contact->address }}</div>
+                            @endif
+                            @if ($contact->maps_url)
+                                <a href="{{ $contact->maps_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                                    <flux:icon name="map-pin" variant="micro" />
+                                    {{ __('Ver en mapa') }}
+                                </a>
+                            @endif
+                        </flux:table.cell>
                         <flux:table.cell class="whitespace-nowrap">{{ $contact->phone }}</flux:table.cell>
                         <flux:table.cell class="py-0">
                             <div class="flex justify-end gap-1">
@@ -108,6 +119,18 @@
                 <flux:label>{{ __('Teléfono') }}</flux:label>
                 <flux:input wire:model="phone" autocomplete="off" />
                 <flux:error name="phone" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Dirección') }}</flux:label>
+                <flux:textarea wire:model="address" rows="2" />
+                <flux:error name="address" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Ubicación en Google Maps (URL)') }}</flux:label>
+                <flux:input type="url" wire:model="maps_url" placeholder="https://maps.app.goo.gl/..." />
+                <flux:error name="maps_url" />
             </flux:field>
 
             <flux:field variant="inline">

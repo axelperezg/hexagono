@@ -18,7 +18,7 @@
         <flux:input
             wire:model.live.debounce.400ms="search"
             icon="magnifying-glass"
-            placeholder="{{ __('Buscar por nombre o sector') }}"
+            placeholder="{{ __('Buscar por nombre, acrónimo o sector') }}"
             class="sm:max-w-xs"
         />
         <flux:select wire:model.live="tagFilter" class="sm:max-w-48" aria-label="{{ __('Etiqueta') }}">
@@ -44,8 +44,13 @@
                 @foreach ($organizations as $organization)
                     <flux:table.row :key="$organization->id">
                         <flux:table.cell>
-                            <div class="font-medium text-zinc-800 dark:text-white">{{ $organization->name }}</div>
-                            <div class="text-zinc-500">{{ $organization->sector }}</div>
+                            <div class="font-medium text-zinc-800 dark:text-white">
+                                {{ $organization->name }}
+                                @if ($organization->acronym)
+                                    <span class="font-normal text-zinc-500">({{ $organization->acronym }})</span>
+                                @endif
+                            </div>
+                            <div class="text-zinc-500">{{ $organization->sector?->name }}</div>
                             @if ($organization->tags->isNotEmpty())
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     @foreach ($organization->tags as $tag)
@@ -88,9 +93,20 @@
             </flux:field>
 
             <flux:field>
+                <flux:label>{{ __('Acrónimo') }}</flux:label>
+                <flux:input wire:model="acronym" />
+                <flux:error name="acronym" />
+            </flux:field>
+
+            <flux:field>
                 <flux:label>{{ __('Sector') }}</flux:label>
-                <flux:input wire:model="sector" />
-                <flux:error name="sector" />
+                <flux:select wire:model="sectorId">
+                    <flux:select.option value="">{{ __('Sin sector') }}</flux:select.option>
+                    @foreach ($this->availableSectors as $sector)
+                        <flux:select.option value="{{ $sector->id }}">{{ $sector->name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="sectorId" />
             </flux:field>
 
             <flux:field>

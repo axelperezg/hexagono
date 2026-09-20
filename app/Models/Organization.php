@@ -7,6 +7,7 @@ use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,8 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property string $name
- * @property string|null $sector
+ * @property string|null $acronym
+ * @property int|null $sector_id
  * @property string|null $website
  * @property string|null $phone
  * @property string|null $notes
@@ -24,11 +26,19 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['name', 'sector', 'website', 'phone', 'notes'])]
+#[Fillable(['name', 'acronym', 'sector_id', 'website', 'phone', 'notes'])]
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory, HasTags, SoftDeletes;
+
+    /**
+     * @return BelongsTo<Sector, $this>
+     */
+    public function sector(): BelongsTo
+    {
+        return $this->belongsTo(Sector::class);
+    }
 
     /**
      * @return HasMany<Contact, $this>

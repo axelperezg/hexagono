@@ -16,12 +16,12 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="envelope" :href="route('contact-messages.index')" :current="request()->routeIs('contact-messages.index')" wire:navigate>
-                        {{ __('Mensajes de contacto') }}
-                    </flux:sidebar.item>
-
                     <flux:sidebar.item icon="building-office" :href="route('organizations.index')" :current="request()->routeIs('organizations.index')" wire:navigate>
                         {{ __('Organizaciones') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="tag" :href="route('sectors.index')" :current="request()->routeIs('sectors.index')" wire:navigate>
+                        {{ __('Sectores') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="user-circle" :href="route('contacts.index')" :current="request()->routeIs('contacts.index')" wire:navigate>
@@ -41,6 +41,12 @@
                             {{ __('Usuarios') }}
                         </flux:sidebar.item>
                     @endif
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Página WEB')" class="grid">
+                    <flux:sidebar.item icon="envelope" :href="route('contact-messages.index')" :current="request()->routeIs('contact-messages.index')" wire:navigate>
+                        {{ __('Mensajes de contacto') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

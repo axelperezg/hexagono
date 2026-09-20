@@ -18,6 +18,14 @@ test('the inbox is displayed to an authenticated user', function () {
     $this->get(route('contact-messages.index'))->assertOk();
 });
 
+test('the sidebar groups the inbox under the website section', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('contact-messages.index'))
+        ->assertOk()
+        ->assertSeeInOrder(['Página WEB', 'Mensajes de contacto']);
+});
+
 test('it lists contact messages with the newest first', function () {
     $this->actingAs(User::factory()->create());
 

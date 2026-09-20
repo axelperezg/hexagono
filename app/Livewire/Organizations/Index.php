@@ -3,6 +3,7 @@
 namespace App\Livewire\Organizations;
 
 use App\Models\Organization;
+use App\Models\Sector;
 use App\Models\Tag;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -36,7 +37,9 @@ class Index extends Component
 
     public string $name = '';
 
-    public string $sector = '';
+    public string $acronym = '';
+
+    public string $sectorId = '';
 
     public string $website = '';
 
@@ -87,7 +90,8 @@ class Index extends Component
         $this->resetForm();
         $this->editingOrganizationId = $organization->id;
         $this->name = $organization->name;
-        $this->sector = (string) $organization->sector;
+        $this->acronym = (string) $organization->acronym;
+        $this->sectorId = (string) $organization->sector_id;
         $this->website = (string) $organization->website;
         $this->phone = (string) $organization->phone;
         $this->notes = (string) $organization->notes;
@@ -107,8 +111,9 @@ class Index extends Component
         $tagIds = Tag::resolveIds($validated['tagIds'], $validated['newTags']);
         $attributes = array_map(
             fn (?string $value) => $value === '' ? null : $value,
-            Arr::except($validated, ['tagIds', 'newTags']),
+            Arr::except($validated, ['tagIds', 'newTags', 'sectorId']),
         );
+        $attributes['sector_id'] = $validated['sectorId'] === '' ? null : (int) $validated['sectorId'];
 
         if ($this->editingOrganizationId) {
             $organization = Organization::findOrFail($this->editingOrganizationId);
@@ -163,6 +168,17 @@ class Index extends Component
     }
 
     /**
+     * Sectors offered in the form.
+     *
+     * @return Collection<int, Sector>
+     */
+    #[Computed]
+    public function availableSectors(): Collection
+    {
+        return Sector::orderBy('name')->get();
+    }
+
+    /**
      * Tags offered in the form and in the filter.
      *
      * @return Collection<int, Tag>
@@ -186,7 +202,7 @@ class Index extends Component
     private function organizations(): LengthAwarePaginator
     {
         return Organization::query()
-            ->with('tags')
+            ->with(['tags', 'sector'])
             ->withCount(['contacts', 'opportunities'])
             ->when(
                 $this->tagFilter !== '',
@@ -197,7 +213,8 @@ class Index extends Component
                 fn ($query) => $query->where(
                     fn ($query) => $query
                         ->whereLike('name', "%{$this->search}%")
-                        ->orWhereLike('sector', "%{$this->search}%")
+                        ->orWhereLike('acronym', "%{$this->search}%")
+                        ->orWhereHas('sector', fn ($query) => $query->whereLike('name', "%{$this->search}%"))
                 )
             )
             ->orderBy('name')
@@ -211,7 +228,8 @@ class Index extends Component
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'sector' => ['nullable', 'string', 'max:255'],
+            'acronym' => ['nullable', 'string', 'max:50'],
+            'sectorId' => ['nullable', Rule::exists('sectors', 'id')],
             'website' => ['nullable', 'url', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:5000'],
@@ -226,7 +244,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingOrganizationId', 'name', 'sector', 'website', 'phone', 'notes', 'tagIds', 'newTags']);
+        $this->reset(['editingOrganizationId', 'name', 'acronym', 'sectorId', 'website', 'phone', 'notes', 'tagIds', 'newTags']);
         $this->resetErrorBag();
     }
 }

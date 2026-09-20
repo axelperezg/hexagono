@@ -24,6 +24,8 @@ class ContactFactory extends Factory
             'position' => fake()->jobTitle(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('55########'),
+            'address' => fake()->address(),
+            'maps_url' => null,
             'is_primary' => false,
             'notes' => null,
         ];
