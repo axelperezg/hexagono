@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContactController;
 use App\Livewire\ContactMessages\Index as ContactMessagesIndex;
 use App\Livewire\Contacts\Index as ContactsIndex;
+use App\Livewire\Opportunities\Board as OpportunitiesBoard;
 use App\Livewire\Opportunities\Index as OpportunitiesIndex;
 use App\Livewire\Opportunities\Show as OpportunitiesShow;
 use App\Livewire\Organizations\Index as OrganizationsIndex;
@@ -27,6 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('organizaciones', OrganizationsIndex::class)->name('organizations.index');
     Route::livewire('contactos', ContactsIndex::class)->name('contacts.index');
     Route::livewire('oportunidades', OpportunitiesIndex::class)->name('opportunities.index');
+    // Must be declared before the {opportunity} wildcard below.
+    Route::livewire('oportunidades/tablero', OpportunitiesBoard::class)->name('opportunities.board');
     Route::livewire('oportunidades/{opportunity}', OpportunitiesShow::class)->name('opportunities.show');
     Route::livewire('tareas', TasksIndex::class)->name('tasks.index');
 
