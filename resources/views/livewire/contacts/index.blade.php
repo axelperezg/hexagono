@@ -1,0 +1,160 @@
+{{--
+    CRM module to create, edit and delete contacts. Full-page Livewire
+    component, routed at /contactos (routes/web.php).
+--}}
+<section class="w-full">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Contactos') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Personas dentro de cada organización.') }}</flux:text>
+        </div>
+
+        <flux:button variant="primary" icon="plus" wire:click="createContact">
+            {{ __('Nuevo contacto') }}
+        </flux:button>
+    </div>
+
+    <div class="mb-4">
+        <flux:input
+            wire:model.live.debounce.400ms="search"
+            icon="magnifying-glass"
+            placeholder="{{ __('Buscar por nombre, correo, cargo u organización') }}"
+            class="sm:max-w-sm"
+        />
+    </div>
+
+    @if ($contacts->isEmpty())
+        <flux:callout icon="user-circle" heading="{{ __('Sin resultados') }}" text="{{ __('No hay contactos que coincidan con esta búsqueda.') }}" />
+    @else
+        <flux:table :paginate="$contacts">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Contacto') }}</flux:table.column>
+                <flux:table.column>{{ __('Organización') }}</flux:table.column>
+                <flux:table.column>{{ __('Teléfono') }}</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach ($contacts as $contact)
+                    <flux:table.row :key="$contact->id">
+                        <flux:table.cell>
+                            <div class="flex items-center gap-2 font-medium text-zinc-800 dark:text-white">
+                                {{ $contact->name }}
+                                @if ($contact->is_primary)
+                                    <flux:badge size="sm" color="blue">{{ __('Principal') }}</flux:badge>
+                                @endif
+                            </div>
+                            <div class="text-zinc-500">{{ $contact->position }}</div>
+                            @if ($contact->email)
+                                <a href="mailto:{{ $contact->email }}" class="text-blue-600 dark:text-blue-400">{{ $contact->email }}</a>
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell>{{ $contact->organization->name }}</flux:table.cell>
+                        <flux:table.cell class="whitespace-nowrap">{{ $contact->phone }}</flux:table.cell>
+                        <flux:table.cell class="py-0">
+                            <div class="flex justify-end gap-1">
+                                <flux:button size="sm" variant="ghost" icon="pencil" wire:click="editContact({{ $contact->id }})">
+                                    {{ __('Editar') }}
+                                </flux:button>
+                                @if (auth()->user()->isAdmin())
+                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="confirmDelete({{ $contact->id }})">
+                                        {{ __('Eliminar') }}
+                                    </flux:button>
+                                @endif
+                            </div>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    @endif
+
+    {{-- Create/edit form, populated by Index::createContact() / Index::editContact() --}}
+    <flux:modal name="contact-form" class="w-full max-w-lg">
+        <form wire:submit="save" class="space-y-6">
+            <flux:heading size="lg">
+                {{ $editingContactId ? __('Editar contacto') : __('Nuevo contacto') }}
+            </flux:heading>
+
+            <flux:field>
+                <flux:label>{{ __('Organización') }}</flux:label>
+                <flux:select wire:model="organization_id" placeholder="{{ __('Selecciona una organización') }}">
+                    @foreach ($this->organizations as $organization)
+                        <flux:select.option value="{{ $organization->id }}">{{ $organization->name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="organization_id" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Nombre') }}</flux:label>
+                <flux:input wire:model="name" autocomplete="off" />
+                <flux:error name="name" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Cargo') }}</flux:label>
+                <flux:input wire:model="position" autocomplete="off" />
+                <flux:error name="position" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Correo electrónico') }}</flux:label>
+                <flux:input type="email" wire:model="email" autocomplete="off" />
+                <flux:error name="email" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Teléfono') }}</flux:label>
+                <flux:input wire:model="phone" autocomplete="off" />
+                <flux:error name="phone" />
+            </flux:field>
+
+            <flux:field variant="inline">
+                <flux:checkbox wire:model="is_primary" />
+                <flux:label>{{ __('Contacto principal de la organización') }}</flux:label>
+                <flux:error name="is_primary" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Notas') }}</flux:label>
+                <flux:textarea wire:model="notes" rows="3" />
+                <flux:error name="notes" />
+            </flux:field>
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="filled">{{ __('Cancelar') }}</flux:button>
+                </flux:modal.close>
+
+                <flux:button variant="primary" type="submit">
+                    {{ $editingContactId ? __('Guardar cambios') : __('Crear contacto') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    {{-- Delete confirmation, populated by Index::confirmDelete() --}}
+    <flux:modal name="confirm-contact-delete" class="w-full max-w-lg">
+        @if ($this->deletingContact)
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('¿Eliminar a :name?', ['name' => $this->deletingContact->name]) }}</flux:heading>
+                    <flux:subheading>
+                        {{ __('El contacto dejará de mostrarse en el CRM. Sus interacciones se conservan.') }}
+                    </flux:subheading>
+                </div>
+
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Cancelar') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button variant="danger" wire:click="delete">
+                        {{ __('Eliminar contacto') }}
+                    </flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+</section>

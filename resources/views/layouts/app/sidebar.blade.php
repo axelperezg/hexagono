@@ -20,6 +20,18 @@
                         {{ __('Mensajes de contacto') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="building-office" :href="route('organizations.index')" :current="request()->routeIs('organizations.index')" wire:navigate>
+                        {{ __('Organizaciones') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="user-circle" :href="route('contacts.index')" :current="request()->routeIs('contacts.index')" wire:navigate>
+                        {{ __('Contactos') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="briefcase" :href="route('opportunities.index')" :current="request()->routeIs('opportunities.*')" wire:navigate>
+                        {{ __('Oportunidades') }}
+                    </flux:sidebar.item>
+
                     @if (auth()->user()->isAdmin())
                         <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>
                             {{ __('Usuarios') }}
