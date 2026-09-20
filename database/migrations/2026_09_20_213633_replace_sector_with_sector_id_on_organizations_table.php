@@ -11,7 +11,8 @@ return new class extends Migration
      * Run the migrations.
      *
      * The free-text `sector` column becomes a foreign key: every distinct
-     * value already stored (case-insensitively) is turned into a sector.
+     * value already stored (case-insensitively) is turned into a sector,
+     * reusing any sector that already exists with that name.
      */
     public function up(): void
     {
@@ -19,7 +20,10 @@ return new class extends Migration
             $table->foreignId('sector_id')->nullable()->after('name')->constrained()->restrictOnDelete();
         });
 
-        $sectorIds = [];
+        $sectorIds = DB::table('sectors')
+            ->pluck('id', 'name')
+            ->mapWithKeys(fn (int $id, string $name) => [mb_strtolower(trim($name)) => $id])
+            ->all();
 
         DB::table('organizations')
             ->whereNotNull('sector')
