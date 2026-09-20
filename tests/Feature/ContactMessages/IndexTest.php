@@ -26,6 +26,25 @@ test('the sidebar groups the inbox under the website section', function () {
         ->assertSeeInOrder(['Página WEB', 'Mensajes de contacto']);
 });
 
+test('the sidebar orders its sections and items', function () {
+    $this->actingAs(User::factory()->admin()->create());
+
+    $this->get(route('dashboard'))
+        ->assertSeeInOrder([
+            'Administrador', 'Sectores', 'Organizaciones', 'Contactos', 'Usuarios',
+            'Leads', 'Oportunidades', 'Tareas',
+            'Página WEB', 'Mensajes de contacto',
+        ]);
+});
+
+test('the sidebar hides the users item from non-admin users', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('dashboard'))
+        ->assertSee('Administrador')
+        ->assertDontSee(route('users.index'));
+});
+
 test('it lists contact messages with the newest first', function () {
     $this->actingAs(User::factory()->create());
 

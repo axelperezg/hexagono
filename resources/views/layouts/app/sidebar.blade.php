@@ -15,25 +15,19 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Administrador')" class="grid">
+                    <flux:sidebar.item icon="tag" :href="route('sectors.index')" :current="request()->routeIs('sectors.index')" wire:navigate>
+                        {{ __('Sectores') }}
+                    </flux:sidebar.item>
 
                     <flux:sidebar.item icon="building-office" :href="route('organizations.index')" :current="request()->routeIs('organizations.index')" wire:navigate>
                         {{ __('Organizaciones') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="tag" :href="route('sectors.index')" :current="request()->routeIs('sectors.index')" wire:navigate>
-                        {{ __('Sectores') }}
-                    </flux:sidebar.item>
-
                     <flux:sidebar.item icon="user-circle" :href="route('contacts.index')" :current="request()->routeIs('contacts.index')" wire:navigate>
                         {{ __('Contactos') }}
-                    </flux:sidebar.item>
-
-                    <flux:sidebar.item icon="briefcase" :href="route('opportunities.index')" :current="request()->routeIs('opportunities.*')" wire:navigate>
-                        {{ __('Oportunidades') }}
-                    </flux:sidebar.item>
-
-                    <flux:sidebar.item icon="clipboard-document-check" :href="route('tasks.index')" :current="request()->routeIs('tasks.index')" wire:navigate>
-                        {{ __('Tareas') }}
                     </flux:sidebar.item>
 
                     @if (auth()->user()->isAdmin())
@@ -41,6 +35,16 @@
                             {{ __('Usuarios') }}
                         </flux:sidebar.item>
                     @endif
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Leads')" class="grid">
+                    <flux:sidebar.item icon="briefcase" :href="route('opportunities.index')" :current="request()->routeIs('opportunities.*')" wire:navigate>
+                        {{ __('Oportunidades') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('tasks.index')" :current="request()->routeIs('tasks.index')" wire:navigate>
+                        {{ __('Tareas') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 <flux:sidebar.group :heading="__('Página WEB')" class="grid">
@@ -51,16 +55,6 @@
             </flux:sidebar.nav>
 
             <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
