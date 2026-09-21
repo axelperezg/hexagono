@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Concerns\HasTags;
+use App\Enums\BudgetItem;
+use App\Enums\Priority;
 use Database\Factories\OpportunityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Auth;
  * @property int|null $user_id
  * @property string $title
  * @property int $fiscal_year
+ * @property BudgetItem|null $budget_item
+ * @property string|null $campaign
+ * @property string|null $version
+ * @property Priority|null $priority
  * @property string|null $estimated_amount
  * @property string $currency
  * @property Carbon|null $expected_close_date
@@ -31,11 +36,11 @@ use Illuminate\Support\Facades\Auth;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['organization_id', 'pipeline_stage_id', 'user_id', 'title', 'fiscal_year', 'estimated_amount', 'currency', 'expected_close_date', 'notes'])]
+#[Fillable(['organization_id', 'pipeline_stage_id', 'user_id', 'title', 'fiscal_year', 'budget_item', 'campaign', 'version', 'priority', 'estimated_amount', 'currency', 'expected_close_date', 'notes'])]
 class Opportunity extends Model
 {
     /** @use HasFactory<OpportunityFactory> */
-    use HasFactory, HasTags, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
      * First and last fiscal years an opportunity can be assigned to.
@@ -78,6 +83,8 @@ class Opportunity extends Model
     {
         return [
             'fiscal_year' => 'integer',
+            'budget_item' => BudgetItem::class,
+            'priority' => Priority::class,
             'estimated_amount' => 'decimal:2',
             'expected_close_date' => 'date',
         ];

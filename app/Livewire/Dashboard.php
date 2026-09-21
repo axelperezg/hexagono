@@ -52,7 +52,7 @@ class Dashboard extends Component
      * Amounts only add up opportunities expressed in MXN; the others are
      * counted in otherCurrency.
      *
-     * @return array{total: int, won: int, byMonth: array<int, int>, outsideYear: int, amount: float, wonAmount: float, amountByMonth: array<int, float>, otherCurrency: int}
+     * @return array{total: int, won: int, byMonth: array<int, int>, outsideYear: int, amount: float, wonAmount: float, amountByMonth: array<int, float>, otherCurrency: int, byStage: array<int, array{count: int, amount: float}>}
      */
     #[Computed]
     public function opportunityStats(): array
@@ -72,6 +72,7 @@ class Dashboard extends Component
         $amount = 0.0;
         $wonAmount = 0.0;
         $otherCurrency = 0;
+        $byStage = [];
 
         foreach ($opportunities as $opportunity) {
             $inYear = $opportunity->expected_close_date?->year === $year;
@@ -82,6 +83,11 @@ class Dashboard extends Component
             }
 
             $amount += $mxnAmount;
+
+            $stageId = (int) $opportunity->pipeline_stage_id;
+            $byStage[$stageId] ??= ['count' => 0, 'amount' => 0.0];
+            $byStage[$stageId]['count']++;
+            $byStage[$stageId]['amount'] += $mxnAmount;
 
             if (in_array($opportunity->pipeline_stage_id, $wonStageIds)) {
                 $wonAmount += $mxnAmount;
@@ -104,7 +110,29 @@ class Dashboard extends Component
             'wonAmount' => $wonAmount,
             'amountByMonth' => $amountByMonth,
             'otherCurrency' => $otherCurrency,
+            'byStage' => $byStage,
         ];
+    }
+
+    /**
+     * Pipeline funnel: every stage in pipeline order with the number of
+     * opportunities of the fiscal year in it and their MXN amount.
+     *
+     * @param  array<int, array{count: int, amount: float}>  $byStage
+     * @return array<int, array{name: string, count: int, amount: float, isWon: bool, isLost: bool}>
+     */
+    public function funnel(array $byStage): array
+    {
+        return PipelineStage::orderBy('position')
+            ->get()
+            ->map(fn (PipelineStage $stage) => [
+                'name' => $stage->name,
+                'count' => $byStage[$stage->id]['count'] ?? 0,
+                'amount' => $byStage[$stage->id]['amount'] ?? 0.0,
+                'isWon' => $stage->is_won,
+                'isLost' => $stage->is_lost,
+            ])
+            ->all();
     }
 
     /**

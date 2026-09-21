@@ -40,10 +40,10 @@
                 <flux:select.option value="{{ $stage->id }}">{{ $stage->name }}</flux:select.option>
             @endforeach
         </flux:select>
-        <flux:select wire:model.live="tagFilter" class="sm:max-w-48" aria-label="{{ __('Etiqueta') }}">
-            <flux:select.option value="">{{ __('Todas las etiquetas') }}</flux:select.option>
-            @foreach ($this->availableTags as $tag)
-                <flux:select.option value="{{ $tag->id }}">{{ $tag->name }}</flux:select.option>
+        <flux:select wire:model.live="priorityFilter" class="sm:max-w-48" aria-label="{{ __('Prioridad') }}">
+            <flux:select.option value="">{{ __('Todas las prioridades') }}</flux:select.option>
+            @foreach (\App\Enums\Priority::cases() as $priority)
+                <flux:select.option value="{{ $priority->value }}">{{ $priority->label() }}</flux:select.option>
             @endforeach
         </flux:select>
     </div>
@@ -69,11 +69,9 @@
                                 {{ $opportunity->title }}
                             </a>
                             <div class="text-zinc-500">{{ $opportunity->organization->name }}</div>
-                            @if ($opportunity->tags->isNotEmpty())
-                                <div class="mt-1 flex flex-wrap gap-1">
-                                    @foreach ($opportunity->tags as $tag)
-                                        <flux:badge size="sm" color="blue">{{ $tag->name }}</flux:badge>
-                                    @endforeach
+                            @if ($opportunity->priority)
+                                <div class="mt-1">
+                                    <flux:badge size="sm" :color="$opportunity->priority->color()">{{ $opportunity->priority->label() }}</flux:badge>
                                 </div>
                             @endif
                         </flux:table.cell>
@@ -122,6 +120,40 @@
                 <flux:input wire:model="title" autocomplete="off" />
                 <flux:error name="title" />
             </flux:field>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <flux:field>
+                    <flux:label>{{ __('Partida') }}</flux:label>
+                    <flux:select wire:model="budget_item" placeholder="{{ __('Sin partida') }}">
+                        @foreach (\App\Enums\BudgetItem::cases() as $item)
+                            <flux:select.option value="{{ $item->value }}">{{ $item->label() }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="budget_item" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Prioridad') }}</flux:label>
+                    <flux:select wire:model="priority" placeholder="{{ __('Sin prioridad') }}">
+                        @foreach (\App\Enums\Priority::cases() as $priorityOption)
+                            <flux:select.option value="{{ $priorityOption->value }}">{{ $priorityOption->label() }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="priority" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Campaña') }}</flux:label>
+                    <flux:input wire:model="campaign" autocomplete="off" />
+                    <flux:error name="campaign" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Versión') }}</flux:label>
+                    <flux:input wire:model="version" autocomplete="off" />
+                    <flux:error name="version" />
+                </flux:field>
+            </div>
 
             <flux:field>
                 <flux:label>{{ __('Ejercicio fiscal') }}</flux:label>
@@ -191,21 +223,6 @@
                 <flux:label>{{ __('Notas') }}</flux:label>
                 <flux:textarea wire:model="notes" rows="3" />
                 <flux:error name="notes" />
-            </flux:field>
-
-            @if ($this->availableTags->isNotEmpty())
-                <flux:checkbox.group wire:model="tagIds" label="{{ __('Etiquetas') }}">
-                    @foreach ($this->availableTags as $tag)
-                        <flux:checkbox value="{{ $tag->id }}" label="{{ $tag->name }}" />
-                    @endforeach
-                </flux:checkbox.group>
-                <flux:error name="tagIds.*" />
-            @endif
-
-            <flux:field>
-                <flux:label>{{ __('Nuevas etiquetas') }}</flux:label>
-                <flux:input wire:model="newTags" placeholder="{{ __('Sepáralas con comas') }}" />
-                <flux:error name="newTags" />
             </flux:field>
 
             <div class="flex justify-end space-x-2 rtl:space-x-reverse">

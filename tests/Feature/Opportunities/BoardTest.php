@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Priority;
 use App\Livewire\Opportunities\Board;
 use App\Models\Opportunity;
 use App\Models\Organization;
@@ -129,4 +130,11 @@ test('the board only shows the current fiscal year by default and can be switche
         ->set('fiscalYearFilter', '2030')
         ->assertSee('Estudio de 2030')
         ->assertDontSee('Estudio de este año');
+});
+
+test('a card shows the priority of its opportunity', function () {
+    $this->actingAs(User::factory()->create());
+    Opportunity::factory()->create(['title' => 'Estudio urgente', 'priority' => Priority::High]);
+
+    Livewire::test(Board::class)->assertSeeInOrder(['Estudio urgente', 'Prioridad alta']);
 });

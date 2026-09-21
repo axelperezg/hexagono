@@ -84,11 +84,9 @@
                                 </div>
                             @endif
 
-                            @if ($opportunity->tags->isNotEmpty())
-                                <div class="mt-2 flex flex-wrap gap-1">
-                                    @foreach ($opportunity->tags as $tag)
-                                        <flux:badge size="sm" color="blue">{{ $tag->name }}</flux:badge>
-                                    @endforeach
+                            @if ($opportunity->priority)
+                                <div class="mt-2">
+                                    <flux:badge size="sm" :color="$opportunity->priority->color()">{{ $opportunity->priority->label() }}</flux:badge>
                                 </div>
                             @endif
 

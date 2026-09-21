@@ -54,6 +54,28 @@
             <dt class="text-zinc-500">{{ __('Responsable') }}</dt>
             <dd>{{ $opportunity->owner?->name ?? '—' }}</dd>
         </div>
+        <div>
+            <dt class="text-zinc-500">{{ __('Partida') }}</dt>
+            <dd>{{ $opportunity->budget_item?->label() ?? '—' }}</dd>
+        </div>
+        <div>
+            <dt class="text-zinc-500">{{ __('Campaña') }}</dt>
+            <dd>{{ $opportunity->campaign ?? '—' }}</dd>
+        </div>
+        <div>
+            <dt class="text-zinc-500">{{ __('Versión') }}</dt>
+            <dd>{{ $opportunity->version ?? '—' }}</dd>
+        </div>
+        <div>
+            <dt class="text-zinc-500">{{ __('Prioridad') }}</dt>
+            <dd>
+                @if ($opportunity->priority)
+                    <flux:badge size="sm" :color="$opportunity->priority->color()">{{ $opportunity->priority->label() }}</flux:badge>
+                @else
+                    —
+                @endif
+            </dd>
+        </div>
         @if ($opportunity->notes)
             <div class="sm:col-span-4">
                 <dt class="text-zinc-500">{{ __('Notas') }}</dt>
@@ -61,14 +83,6 @@
             </div>
         @endif
     </dl>
-
-    @if ($opportunity->tags->isNotEmpty())
-        <div class="mb-6 flex flex-wrap gap-2">
-            @foreach ($opportunity->tags as $tag)
-                <flux:badge size="sm" color="blue">{{ $tag->name }}</flux:badge>
-            @endforeach
-        </div>
-    @endif
 
     {{-- Follow-up tasks --}}
     <div class="mb-4 flex items-center justify-between">

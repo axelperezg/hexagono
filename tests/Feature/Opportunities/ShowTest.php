@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\BudgetItem;
 use App\Enums\InteractionType;
+use App\Enums\Priority;
 use App\Livewire\Opportunities\Show;
 use App\Models\Contact;
 use App\Models\Interaction;
@@ -191,4 +193,18 @@ test('the opportunity page shows its fiscal year and the organization logo', fun
         ->assertOk()
         ->assertSeeInOrder(['Ejercicio fiscal', '2031'])
         ->assertSee($organization->logoUrl(), false);
+});
+
+test('the opportunity page shows its budget item, campaign, version and priority', function () {
+    $this->actingAs(User::factory()->create());
+    $opportunity = Opportunity::factory()->create([
+        'budget_item' => BudgetItem::Item36201,
+        'campaign' => 'Campaña de verano',
+        'version' => 'V3',
+        'priority' => Priority::Medium,
+    ]);
+
+    $this->get(route('opportunities.show', $opportunity))
+        ->assertOk()
+        ->assertSeeInOrder(['Partida', '36201', 'Campaña', 'Campaña de verano', 'Versión', 'V3', 'Prioridad', 'Prioridad media']);
 });

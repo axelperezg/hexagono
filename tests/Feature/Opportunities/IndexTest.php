@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\BudgetItem;
+use App\Enums\Priority;
 use App\Livewire\Opportunities\Index;
 use App\Models\Opportunity;
 use App\Models\Organization;
@@ -145,3 +147,91 @@ test('the fiscal year must be between 2026 and 2036', function (string $year) {
         ->call('save')
         ->assertHasErrors(['fiscal_year']);
 })->with(['2025', '2037', 'abc']);
+
+test('an opportunity can store its budget item, campaign, version and priority', function () {
+    $this->actingAs(User::factory()->create());
+    PipelineStage::factory()->create(['position' => 1]);
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createOpportunity')
+        ->set('organization_id', (string) $organization->id)
+        ->set('title', 'Estudio de opinión')
+        ->set('budget_item', '36101')
+        ->set('campaign', 'Campaña de verano')
+        ->set('version', 'V2')
+        ->set('priority', 'high')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $opportunity = Opportunity::firstWhere('title', 'Estudio de opinión');
+
+    expect($opportunity->budget_item)->toBe(BudgetItem::Item36101)
+        ->and($opportunity->campaign)->toBe('Campaña de verano')
+        ->and($opportunity->version)->toBe('V2')
+        ->and($opportunity->priority)->toBe(Priority::High);
+});
+
+test('the budget item, campaign, version and priority are optional', function () {
+    $this->actingAs(User::factory()->create());
+    PipelineStage::factory()->create(['position' => 1]);
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createOpportunity')
+        ->set('organization_id', (string) $organization->id)
+        ->set('title', 'Sin datos extra')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $opportunity = Opportunity::firstWhere('title', 'Sin datos extra');
+
+    expect($opportunity->budget_item)->toBeNull()
+        ->and($opportunity->campaign)->toBeNull()
+        ->and($opportunity->version)->toBeNull()
+        ->and($opportunity->priority)->toBeNull();
+});
+
+test('the budget item and priority must be one of the supported values', function () {
+    $this->actingAs(User::factory()->create());
+    PipelineStage::factory()->create(['position' => 1]);
+
+    Livewire::test(Index::class)
+        ->call('createOpportunity')
+        ->set('budget_item', '99999')
+        ->set('priority', 'urgent')
+        ->call('save')
+        ->assertHasErrors(['budget_item', 'priority']);
+});
+
+test('editing an opportunity loads and changes its priority and budget item', function () {
+    $this->actingAs(User::factory()->create());
+    $opportunity = Opportunity::factory()->create(['priority' => Priority::Low, 'budget_item' => BudgetItem::NotApplicable]);
+
+    Livewire::test(Index::class)
+        ->call('editOpportunity', $opportunity->id)
+        ->assertSet('priority', 'low')
+        ->assertSet('budget_item', 'no_aplica')
+        ->set('priority', 'medium')
+        ->set('budget_item', '36201')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($opportunity->refresh()->priority)->toBe(Priority::Medium)
+        ->and($opportunity->budget_item)->toBe(BudgetItem::Item36201);
+});
+
+test('opportunities show their priority and can be filtered by it', function () {
+    $this->actingAs(User::factory()->create());
+    Opportunity::factory()->create(['title' => 'Urgente', 'priority' => Priority::High]);
+    Opportunity::factory()->create(['title' => 'Tranquila', 'priority' => Priority::Low]);
+    Opportunity::factory()->create(['title' => 'Sin prioridad definida']);
+
+    Livewire::test(Index::class)
+        ->assertSee('Prioridad alta')
+        ->assertSee('Prioridad baja')
+        ->set('priorityFilter', 'high')
+        ->assertSee('Urgente')
+        ->assertDontSee('Tranquila')
+        ->assertDontSee('Sin prioridad definida');
+});

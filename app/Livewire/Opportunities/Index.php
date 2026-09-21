@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Opportunities;
 
+use App\Enums\BudgetItem;
+use App\Enums\Priority;
 use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\PipelineStage;
-use App\Models\Tag;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -61,6 +61,14 @@ class Index extends Component
 
     public string $fiscal_year = '';
 
+    public string $budget_item = '';
+
+    public string $campaign = '';
+
+    public string $version = '';
+
+    public string $priority = '';
+
     public string $estimated_amount = '';
 
     public string $currency = 'MXN';
@@ -69,15 +77,8 @@ class Index extends Component
 
     public string $notes = '';
 
-    /**
-     * @var array<int, string>
-     */
-    public array $tagIds = [];
-
-    public string $newTags = '';
-
-    #[Url(as: 'etiqueta', history: true)]
-    public string $tagFilter = '';
+    #[Url(as: 'prioridad', history: true)]
+    public string $priorityFilter = '';
 
     /**
      * Default the fiscal year filter to the current year.
@@ -107,7 +108,7 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatingTagFilter(): void
+    public function updatingPriorityFilter(): void
     {
         $this->resetPage();
     }
@@ -137,11 +138,14 @@ class Index extends Component
         $this->user_id = (string) $opportunity->user_id;
         $this->title = $opportunity->title;
         $this->fiscal_year = (string) $opportunity->fiscal_year;
+        $this->budget_item = (string) $opportunity->budget_item?->value;
+        $this->campaign = (string) $opportunity->campaign;
+        $this->version = (string) $opportunity->version;
+        $this->priority = (string) $opportunity->priority?->value;
         $this->estimated_amount = (string) $opportunity->estimated_amount;
         $this->currency = $opportunity->currency;
         $this->expected_close_date = (string) $opportunity->expected_close_date?->format('Y-m-d');
         $this->notes = (string) $opportunity->notes;
-        $this->tagIds = $opportunity->tags()->pluck('tags.id')->map(fn (int $id) => (string) $id)->all();
 
         Flux::modal('opportunity-form')->show();
     }
@@ -154,10 +158,9 @@ class Index extends Component
     {
         $validated = $this->validate($this->rules());
 
-        $tagIds = Tag::resolveIds($validated['tagIds'], $validated['newTags']);
         $attributes = array_map(
             fn (?string $value) => $value === '' ? null : $value,
-            Arr::except($validated, ['tagIds', 'newTags']),
+            $validated,
         );
 
         if ($this->editingOpportunityId) {
@@ -170,8 +173,6 @@ class Index extends Component
 
             Flux::toast(variant: 'success', text: __('Oportunidad creada.'));
         }
-
-        $opportunity->tags()->sync($tagIds);
 
         Flux::modal('opportunity-form')->close();
 
@@ -239,17 +240,6 @@ class Index extends Component
         return User::orderBy('name')->get(['id', 'name']);
     }
 
-    /**
-     * Tags offered in the form and in the filter.
-     *
-     * @return Collection<int, Tag>
-     */
-    #[Computed]
-    public function availableTags(): Collection
-    {
-        return Tag::orderBy('name')->get();
-    }
-
     public function render(): View
     {
         return view('livewire.opportunities.index', [
@@ -263,7 +253,7 @@ class Index extends Component
     private function opportunities(): LengthAwarePaginator
     {
         return Opportunity::query()
-            ->with(['organization', 'stage', 'owner', 'tags'])
+            ->with(['organization', 'stage', 'owner'])
             ->whereHas('organization')
             ->when(
                 $this->stageFilter !== '',
@@ -274,8 +264,8 @@ class Index extends Component
                 fn ($query) => $query->where('fiscal_year', $this->fiscalYearFilter)
             )
             ->when(
-                $this->tagFilter !== '',
-                fn ($query) => $query->whereHas('tags', fn ($query) => $query->whereKey($this->tagFilter))
+                $this->priorityFilter !== '',
+                fn ($query) => $query->where('priority', $this->priorityFilter)
             )
             ->when(
                 $this->search !== '',
@@ -299,14 +289,15 @@ class Index extends Component
             'pipeline_stage_id' => ['required', Rule::exists('pipeline_stages', 'id')],
             'user_id' => ['nullable', Rule::exists('users', 'id')],
             'title' => ['required', 'string', 'max:255'],
+            'budget_item' => ['nullable', Rule::enum(BudgetItem::class)],
+            'campaign' => ['nullable', 'string', 'max:255'],
+            'version' => ['nullable', 'string', 'max:255'],
+            'priority' => ['nullable', Rule::enum(Priority::class)],
             'fiscal_year' => ['required', 'integer', 'between:'.Opportunity::FISCAL_YEAR_MIN.','.Opportunity::FISCAL_YEAR_MAX],
             'estimated_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],
             'currency' => ['required', Rule::in(self::CURRENCIES)],
             'expected_close_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:5000'],
-            'tagIds' => ['array'],
-            'tagIds.*' => [Rule::exists('tags', 'id')],
-            'newTags' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -315,7 +306,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes', 'tagIds', 'newTags']);
+        $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes', 'budget_item', 'campaign', 'version', 'priority']);
         $this->currency = self::CURRENCIES[0];
         $this->fiscal_year = (string) now()->year;
         $this->user_id = (string) Auth::id();
