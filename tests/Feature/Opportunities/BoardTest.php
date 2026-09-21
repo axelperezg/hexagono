@@ -116,3 +116,17 @@ test('moving to a non-existing stage or a non-existing opportunity is rejected',
 
     expect($opportunity->refresh()->pipeline_stage_id)->toBe($originalStageId);
 });
+
+test('the board only shows the current fiscal year by default and can be switched to another year', function () {
+    $this->actingAs(User::factory()->create());
+    Opportunity::factory()->create(['title' => 'Estudio de este año', 'fiscal_year' => now()->year]);
+    Opportunity::factory()->create(['title' => 'Estudio de 2030', 'fiscal_year' => 2030]);
+
+    Livewire::test(Board::class)
+        ->assertSet('fiscalYearFilter', (string) now()->year)
+        ->assertSee('Estudio de este año')
+        ->assertDontSee('Estudio de 2030')
+        ->set('fiscalYearFilter', '2030')
+        ->assertSee('Estudio de 2030')
+        ->assertDontSee('Estudio de este año');
+});

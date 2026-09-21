@@ -28,6 +28,12 @@
             class="sm:max-w-xs"
         />
 
+        <flux:select wire:model.live="fiscalYearFilter" class="sm:max-w-32" aria-label="{{ __('Ejercicio fiscal') }}">
+            @foreach (\App\Models\Opportunity::fiscalYears() as $year)
+                <flux:select.option value="{{ $year }}">{{ $year }}</flux:select.option>
+            @endforeach
+        </flux:select>
+
         <flux:select wire:model.live="stageFilter" class="sm:max-w-48">
             <flux:select.option value="">{{ __('Todas las etapas') }}</flux:select.option>
             @foreach ($this->stages as $stage)
@@ -48,6 +54,7 @@
         <flux:table :paginate="$opportunities">
             <flux:table.columns>
                 <flux:table.column>{{ __('Oportunidad') }}</flux:table.column>
+                <flux:table.column>{{ __('Ejercicio') }}</flux:table.column>
                 <flux:table.column>{{ __('Etapa') }}</flux:table.column>
                 <flux:table.column>{{ __('Monto estimado') }}</flux:table.column>
                 <flux:table.column>{{ __('Responsable') }}</flux:table.column>
@@ -70,6 +77,7 @@
                                 </div>
                             @endif
                         </flux:table.cell>
+                        <flux:table.cell>{{ $opportunity->fiscal_year }}</flux:table.cell>
                         <flux:table.cell class="py-0">
                             <flux:badge size="sm" :color="$opportunity->stage->is_won ? 'green' : ($opportunity->stage->is_lost ? 'red' : 'zinc')">
                                 {{ $opportunity->stage->name }}
@@ -113,6 +121,16 @@
                 <flux:label>{{ __('Título') }}</flux:label>
                 <flux:input wire:model="title" autocomplete="off" />
                 <flux:error name="title" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Ejercicio fiscal') }}</flux:label>
+                <flux:select wire:model="fiscal_year">
+                    @foreach (\App\Models\Opportunity::fiscalYears() as $year)
+                        <flux:select.option value="{{ $year }}">{{ $year }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="fiscal_year" />
             </flux:field>
 
             <flux:field>

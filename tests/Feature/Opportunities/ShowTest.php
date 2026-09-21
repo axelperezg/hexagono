@@ -205,3 +205,14 @@ test('an admin can delete a task and a non-admin cannot', function () {
 
     $this->assertModelMissing($task);
 });
+
+test('the opportunity page shows its fiscal year and the organization logo', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create(['logo_path' => 'organization-logos/acme.png']);
+    $opportunity = Opportunity::factory()->for($organization)->create(['fiscal_year' => 2031]);
+
+    $this->get(route('opportunities.show', $opportunity))
+        ->assertOk()
+        ->assertSeeInOrder(['Ejercicio fiscal', '2031'])
+        ->assertSee($organization->logoUrl(), false);
+});

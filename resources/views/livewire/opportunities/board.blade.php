@@ -23,6 +23,12 @@
             class="sm:max-w-xs"
         />
 
+        <flux:select wire:model.live="fiscalYearFilter" class="sm:max-w-32" aria-label="{{ __('Ejercicio fiscal') }}">
+            @foreach (\App\Models\Opportunity::fiscalYears() as $year)
+                <flux:select.option value="{{ $year }}">{{ $year }}</flux:select.option>
+            @endforeach
+        </flux:select>
+
         <flux:select wire:model.live="owner" class="sm:max-w-48" aria-label="{{ __('Responsable') }}">
             <flux:select.option value="all">{{ __('Todas las oportunidades') }}</flux:select.option>
             <flux:select.option value="mine">{{ __('Mis oportunidades') }}</flux:select.option>

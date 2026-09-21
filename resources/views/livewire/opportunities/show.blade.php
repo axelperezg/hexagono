@@ -11,9 +11,17 @@
     </div>
 
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-            <flux:heading size="xl">{{ $opportunity->title }}</flux:heading>
-            <flux:text class="mt-1">{{ $opportunity->organization->name }}</flux:text>
+        <div class="flex items-center gap-4">
+            <flux:avatar
+                size="lg"
+                :src="$opportunity->organization->logoUrl()"
+                :name="$opportunity->organization->name"
+                alt="{{ __('Logo de :name', ['name' => $opportunity->organization->name]) }}"
+            />
+            <div>
+                <flux:heading size="xl">{{ $opportunity->title }}</flux:heading>
+                <flux:text class="mt-1">{{ $opportunity->organization->name }}</flux:text>
+            </div>
         </div>
 
         <flux:select wire:model.live="pipeline_stage_id" class="sm:max-w-48" aria-label="{{ __('Etapa') }}">
@@ -23,7 +31,11 @@
         </flux:select>
     </div>
 
-    <dl class="mb-8 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+    <dl class="mb-8 grid grid-cols-1 gap-4 text-sm sm:grid-cols-4">
+        <div>
+            <dt class="text-zinc-500">{{ __('Ejercicio fiscal') }}</dt>
+            <dd>{{ $opportunity->fiscal_year }}</dd>
+        </div>
         <div>
             <dt class="text-zinc-500">{{ __('Monto estimado') }}</dt>
             <dd>
@@ -43,7 +55,7 @@
             <dd>{{ $opportunity->owner?->name ?? '—' }}</dd>
         </div>
         @if ($opportunity->notes)
-            <div class="sm:col-span-3">
+            <div class="sm:col-span-4">
                 <dt class="text-zinc-500">{{ __('Notas') }}</dt>
                 <dd class="whitespace-pre-line">{{ $opportunity->notes }}</dd>
             </div>

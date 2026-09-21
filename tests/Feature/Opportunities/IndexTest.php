@@ -102,3 +102,46 @@ test('an admin can delete an opportunity and a non-admin cannot', function () {
 
     $this->assertSoftDeleted($opportunity);
 });
+
+test('the list is filtered by the current fiscal year by default and can be switched to another year', function () {
+    $this->actingAs(User::factory()->create());
+
+    Opportunity::factory()->create(['title' => 'Estudio de este año', 'fiscal_year' => now()->year]);
+    Opportunity::factory()->create(['title' => 'Estudio de 2030', 'fiscal_year' => 2030]);
+
+    Livewire::test(Index::class)
+        ->assertSet('fiscalYearFilter', (string) now()->year)
+        ->assertSee('Estudio de este año')
+        ->assertDontSee('Estudio de 2030')
+        ->set('fiscalYearFilter', '2030')
+        ->assertSee('Estudio de 2030')
+        ->assertDontSee('Estudio de este año');
+});
+
+test('the form defaults the fiscal year to the current year and saves the chosen one', function () {
+    $this->actingAs(User::factory()->create());
+    PipelineStage::factory()->create();
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createOpportunity')
+        ->assertSet('fiscal_year', (string) now()->year)
+        ->set('organization_id', (string) $organization->id)
+        ->set('title', 'Estudio 2031')
+        ->set('fiscal_year', '2031')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('opportunities', ['title' => 'Estudio 2031', 'fiscal_year' => 2031]);
+});
+
+test('the fiscal year must be between 2026 and 2036', function (string $year) {
+    $this->actingAs(User::factory()->create());
+    PipelineStage::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createOpportunity')
+        ->set('fiscal_year', $year)
+        ->call('save')
+        ->assertHasErrors(['fiscal_year']);
+})->with(['2025', '2037', 'abc']);

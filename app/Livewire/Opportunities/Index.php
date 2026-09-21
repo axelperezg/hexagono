@@ -44,6 +44,9 @@ class Index extends Component
     #[Url(as: 'etapa', history: true)]
     public string $stageFilter = '';
 
+    #[Url(as: 'ejercicio', history: true)]
+    public string $fiscalYearFilter = '';
+
     public ?int $editingOpportunityId = null;
 
     public ?int $deletingOpportunityId = null;
@@ -55,6 +58,8 @@ class Index extends Component
     public string $user_id = '';
 
     public string $title = '';
+
+    public string $fiscal_year = '';
 
     public string $estimated_amount = '';
 
@@ -75,6 +80,16 @@ class Index extends Component
     public string $tagFilter = '';
 
     /**
+     * Default the fiscal year filter to the current year.
+     */
+    public function mount(): void
+    {
+        if ($this->fiscalYearFilter === '') {
+            $this->fiscalYearFilter = (string) now()->year;
+        }
+    }
+
+    /**
      * Reset to the first page whenever a filter changes.
      */
     public function updatingSearch(): void
@@ -83,6 +98,11 @@ class Index extends Component
     }
 
     public function updatingStageFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiscalYearFilter(): void
     {
         $this->resetPage();
     }
@@ -116,6 +136,7 @@ class Index extends Component
         $this->pipeline_stage_id = (string) $opportunity->pipeline_stage_id;
         $this->user_id = (string) $opportunity->user_id;
         $this->title = $opportunity->title;
+        $this->fiscal_year = (string) $opportunity->fiscal_year;
         $this->estimated_amount = (string) $opportunity->estimated_amount;
         $this->currency = $opportunity->currency;
         $this->expected_close_date = (string) $opportunity->expected_close_date?->format('Y-m-d');
@@ -249,6 +270,10 @@ class Index extends Component
                 fn ($query) => $query->where('pipeline_stage_id', $this->stageFilter)
             )
             ->when(
+                $this->fiscalYearFilter !== '',
+                fn ($query) => $query->where('fiscal_year', $this->fiscalYearFilter)
+            )
+            ->when(
                 $this->tagFilter !== '',
                 fn ($query) => $query->whereHas('tags', fn ($query) => $query->whereKey($this->tagFilter))
             )
@@ -274,6 +299,7 @@ class Index extends Component
             'pipeline_stage_id' => ['required', Rule::exists('pipeline_stages', 'id')],
             'user_id' => ['nullable', Rule::exists('users', 'id')],
             'title' => ['required', 'string', 'max:255'],
+            'fiscal_year' => ['required', 'integer', 'between:'.Opportunity::FISCAL_YEAR_MIN.','.Opportunity::FISCAL_YEAR_MAX],
             'estimated_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],
             'currency' => ['required', Rule::in(self::CURRENCIES)],
             'expected_close_date' => ['nullable', 'date'],
@@ -291,6 +317,7 @@ class Index extends Component
     {
         $this->reset(['editingOpportunityId', 'organization_id', 'title', 'estimated_amount', 'expected_close_date', 'notes', 'tagIds', 'newTags']);
         $this->currency = self::CURRENCIES[0];
+        $this->fiscal_year = (string) now()->year;
         $this->user_id = (string) Auth::id();
         $this->pipeline_stage_id = (string) $this->stages()->first()?->id;
         $this->resetErrorBag();

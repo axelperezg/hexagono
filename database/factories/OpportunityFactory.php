@@ -25,6 +25,7 @@ class OpportunityFactory extends Factory
             'pipeline_stage_id' => PipelineStage::factory(),
             'user_id' => User::factory(),
             'title' => fake()->sentence(4),
+            'fiscal_year' => now()->year,
             'estimated_amount' => fake()->randomFloat(2, 10000, 500000),
             'currency' => 'MXN',
             'expected_close_date' => fake()->dateTimeBetween('now', '+6 months'),
