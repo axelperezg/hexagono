@@ -146,3 +146,33 @@ test('the dashboard shows the MXN amounts and warns about opportunities in anoth
         ->assertSee('$250,000')
         ->assertSee('1 oportunidad en otra moneda no se incluye en los montos.');
 });
+
+test('the funnel lists every stage in pipeline order with the opportunities of the fiscal year and their MXN amount', function () {
+    $this->actingAs(User::factory()->create());
+    $proposal = PipelineStage::factory()->create(['name' => 'Propuesta', 'position' => 2]);
+    $prospect = PipelineStage::factory()->create(['name' => 'Prospecto', 'position' => 1]);
+    $won = PipelineStage::factory()->create(['name' => 'Cerrada', 'position' => 3, 'is_won' => true]);
+    Opportunity::factory()->count(2)->for($prospect, 'stage')->create(['fiscal_year' => 2028, 'estimated_amount' => 1000, 'currency' => 'MXN']);
+    Opportunity::factory()->for($proposal, 'stage')->create(['fiscal_year' => 2028, 'estimated_amount' => 500, 'currency' => 'USD']);
+    Opportunity::factory()->for($prospect, 'stage')->create(['fiscal_year' => 2029]);
+
+    $dashboard = Livewire::test(Dashboard::class)
+        ->set('fiscalYearFilter', '2028')
+        ->instance();
+    $funnel = $dashboard->funnel($dashboard->opportunityStats()['byStage']);
+
+    expect(array_column($funnel, 'name'))->toBe(['Prospecto', 'Propuesta', 'Cerrada'])
+        ->and(array_column($funnel, 'count'))->toBe([2, 1, 0])
+        ->and(array_column($funnel, 'amount'))->toBe([2000.0, 0.0, 0.0])
+        ->and(array_column($funnel, 'isWon'))->toBe([false, false, true]);
+});
+
+test('the dashboard renders the funnel with the stage names and counts', function () {
+    $this->actingAs(User::factory()->create());
+    $stage = PipelineStage::factory()->create(['name' => 'Demo', 'position' => 1]);
+    Opportunity::factory()->for($stage, 'stage')->create(['fiscal_year' => now()->year, 'estimated_amount' => 250000, 'currency' => 'MXN']);
+
+    Livewire::test(Dashboard::class)
+        ->assertSee('Embudo por etapa')
+        ->assertSee('Demo: 1 oportunidad · $250,000 MXN', false);
+});

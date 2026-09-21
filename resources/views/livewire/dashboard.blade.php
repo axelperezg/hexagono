@@ -82,6 +82,13 @@
         </div>
 
         <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+            <flux:heading size="lg">{{ __('Embudo por etapa') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Oportunidades del ejercicio :year en cada etapa del pipeline.', ['year' => $this->fiscalYear]) }}</flux:text>
+
+            <x-funnel-chart :data="$this->funnel($this->opportunityStats['byStage'])" :label="__('Oportunidades por etapa del pipeline')" />
+        </div>
+
+        <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading size="lg">{{ __('Tareas pendientes') }}</flux:heading>
             <flux:text class="mt-1">{{ __('Por mes de su fecha de término en :year.', ['year' => $this->fiscalYear]) }}</flux:text>
 
