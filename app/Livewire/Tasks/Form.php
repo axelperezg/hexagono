@@ -42,9 +42,11 @@ class Form extends Component
     public string $notes = '';
 
     /**
-     * Repeater rows: the actions carried out on the task and their dates.
+     * Repeater rows (description and performed_at): the actions carried out
+     * on the task. Rows come from the browser, so their shape is only trusted
+     * after validation.
      *
-     * @var array<int, array{description: string, performed_at: string}>
+     * @var array<int, mixed>
      */
     public array $taskActions = [];
 
