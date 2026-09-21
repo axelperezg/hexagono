@@ -25,11 +25,24 @@ class Board extends Component
     #[Url(as: 'buscar', history: true)]
     public string $search = '';
 
+    #[Url(as: 'ejercicio', history: true)]
+    public string $fiscalYearFilter = '';
+
     /**
      * Owner filter: "all" (default) or "mine".
      */
     #[Url(as: 'responsable', history: true)]
     public string $owner = 'all';
+
+    /**
+     * Default the fiscal year filter to the current year.
+     */
+    public function mount(): void
+    {
+        if ($this->fiscalYearFilter === '') {
+            $this->fiscalYearFilter = (string) now()->year;
+        }
+    }
 
     /**
      * Handle a card dropped by wire:sort: put the opportunity in the
@@ -102,6 +115,10 @@ class Board extends Component
     {
         return Opportunity::query()
             ->whereHas('organization')
+            ->when(
+                $this->fiscalYearFilter !== '',
+                fn ($query) => $query->where('fiscal_year', $this->fiscalYearFilter)
+            )
             ->when($this->owner === 'mine', fn ($query) => $query->where('user_id', auth()->id()))
             ->when(
                 $this->search !== '',

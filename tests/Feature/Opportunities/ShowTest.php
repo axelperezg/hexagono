@@ -8,6 +8,7 @@ use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\PipelineStage;
 use App\Models\Task;
+use App\Models\TaskAction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\Rules\Enum;
@@ -121,54 +122,29 @@ test('an admin can delete an interaction and a non-admin cannot', function () {
     $this->assertModelMissing($interaction);
 });
 
-test('a user can add a task assigned to themselves by default', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-    $opportunity = Opportunity::factory()->create();
-
-    Livewire::test(Show::class, ['opportunity' => $opportunity])
-        ->call('createTask')
-        ->assertSet('task_user_id', (string) $user->id)
-        ->set('task_title', 'Enviar propuesta')
-        ->set('task_due_date', '2026-10-01')
-        ->call('saveTask')
-        ->assertHasNoErrors();
-
-    $task = $opportunity->tasks()->sole();
-
-    expect($task->title)->toBe('Enviar propuesta')
-        ->and($task->due_date->toDateString())->toBe('2026-10-01')
-        ->and($task->user_id)->toBe($user->id)
-        ->and($task->notes)->toBeNull();
-});
-
-test('a task requires a title and a due date', function () {
+test('the opportunity page lists its tasks with their dates and actions', function () {
     $this->actingAs(User::factory()->create());
     $opportunity = Opportunity::factory()->create();
+    $task = Task::factory()->for($opportunity)->create([
+        'concept' => 'Enviar propuesta',
+        'start_date' => '2026-10-01',
+        'end_date' => '2026-10-15',
+    ]);
+    TaskAction::factory()->for($task)->create(['description' => 'Llamada de seguimiento', 'performed_at' => '2026-10-03']);
 
-    Livewire::test(Show::class, ['opportunity' => $opportunity])
-        ->call('createTask')
-        ->call('saveTask')
-        ->assertHasErrors(['task_title' => 'required', 'task_due_date' => 'required']);
-
-    expect($opportunity->tasks()->count())->toBe(0);
+    $this->get(route('opportunities.show', $opportunity))
+        ->assertOk()
+        ->assertSeeInOrder(['Enviar propuesta', '01/10/2026', '15/10/2026', '03/10/2026', 'Llamada de seguimiento']);
 });
 
-test('a user can edit, complete and reopen a task of the opportunity', function () {
+test('a user can complete and reopen a task of the opportunity', function () {
     $this->actingAs(User::factory()->create());
     $opportunity = Opportunity::factory()->create();
-    $task = Task::factory()->for($opportunity)->create(['title' => 'Old title']);
+    $task = Task::factory()->for($opportunity)->create();
 
-    Livewire::test(Show::class, ['opportunity' => $opportunity])
-        ->call('editTask', $task->id)
-        ->assertSet('task_title', 'Old title')
-        ->set('task_title', 'New title')
-        ->call('saveTask')
-        ->assertHasNoErrors()
-        ->call('toggleTask', $task->id);
+    Livewire::test(Show::class, ['opportunity' => $opportunity])->call('toggleTask', $task->id);
 
-    expect($task->refresh()->title)->toBe('New title')
-        ->and($task->isCompleted())->toBeTrue();
+    expect($task->refresh()->isCompleted())->toBeTrue();
 
     Livewire::test(Show::class, ['opportunity' => $opportunity])->call('toggleTask', $task->id);
 
@@ -204,4 +180,15 @@ test('an admin can delete a task and a non-admin cannot', function () {
         ->call('deleteTask', $task->id);
 
     $this->assertModelMissing($task);
+});
+
+test('the opportunity page shows its fiscal year and the organization logo', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create(['logo_path' => 'organization-logos/acme.png']);
+    $opportunity = Opportunity::factory()->for($organization)->create(['fiscal_year' => 2031]);
+
+    $this->get(route('opportunities.show', $opportunity))
+        ->assertOk()
+        ->assertSeeInOrder(['Ejercicio fiscal', '2031'])
+        ->assertSee($organization->logoUrl(), false);
 });

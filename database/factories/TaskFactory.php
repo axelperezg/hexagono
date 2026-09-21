@@ -22,9 +22,10 @@ class TaskFactory extends Factory
         return [
             'opportunity_id' => Opportunity::factory(),
             'user_id' => User::factory(),
-            'title' => fake()->sentence(4),
+            'concept' => fake()->sentence(4),
             'notes' => null,
-            'due_date' => fake()->dateTimeBetween('+1 day', '+1 month'),
+            'start_date' => today(),
+            'end_date' => fake()->dateTimeBetween('+1 day', '+1 month'),
             'completed_at' => null,
         ];
     }
@@ -38,10 +39,21 @@ class TaskFactory extends Factory
     }
 
     /**
-     * Indicate that the task is pending and its due date has passed.
+     * Indicate that the task is pending and its end date has passed.
      */
     public function overdue(): static
     {
-        return $this->state(fn (array $attributes) => ['due_date' => today()->subDays(3)]);
+        return $this->state(fn (array $attributes) => [
+            'start_date' => today()->subDays(10),
+            'end_date' => today()->subDays(3),
+        ]);
+    }
+
+    /**
+     * Indicate that the task is not tied to any opportunity.
+     */
+    public function withoutOpportunity(): static
+    {
+        return $this->state(fn (array $attributes) => ['opportunity_id' => null]);
     }
 }

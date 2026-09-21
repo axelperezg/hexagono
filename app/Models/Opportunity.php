@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
  * @property int $board_position
  * @property int|null $user_id
  * @property string $title
+ * @property int $fiscal_year
  * @property string|null $estimated_amount
  * @property string $currency
  * @property Carbon|null $expected_close_date
@@ -30,11 +31,28 @@ use Illuminate\Support\Facades\Auth;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['organization_id', 'pipeline_stage_id', 'user_id', 'title', 'estimated_amount', 'currency', 'expected_close_date', 'notes'])]
+#[Fillable(['organization_id', 'pipeline_stage_id', 'user_id', 'title', 'fiscal_year', 'estimated_amount', 'currency', 'expected_close_date', 'notes'])]
 class Opportunity extends Model
 {
     /** @use HasFactory<OpportunityFactory> */
     use HasFactory, HasTags, SoftDeletes;
+
+    /**
+     * First and last fiscal years an opportunity can be assigned to.
+     */
+    public const FISCAL_YEAR_MIN = 2026;
+
+    public const FISCAL_YEAR_MAX = 2036;
+
+    /**
+     * Fiscal years offered in the form and the list filter.
+     *
+     * @return array<int, int>
+     */
+    public static function fiscalYears(): array
+    {
+        return range(self::FISCAL_YEAR_MIN, self::FISCAL_YEAR_MAX);
+    }
 
     /**
      * Record the pipeline stage history: the initial stage on creation and
@@ -59,6 +77,7 @@ class Opportunity extends Model
     protected function casts(): array
     {
         return [
+            'fiscal_year' => 'integer',
             'estimated_amount' => 'decimal:2',
             'expected_close_date' => 'date',
         ];
