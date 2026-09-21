@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContactController;
 use App\Livewire\ContactMessages\Index as ContactMessagesIndex;
 use App\Livewire\Contacts\Index as ContactsIndex;
+use App\Livewire\Dashboard;
 use App\Livewire\Opportunities\Board as OpportunitiesBoard;
 use App\Livewire\Opportunities\Index as OpportunitiesIndex;
 use App\Livewire\Opportunities\Show as OpportunitiesShow;
@@ -18,7 +19,7 @@ Route::view('/', 'welcome')->name('home');
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('dashboard', Dashboard::class)->name('dashboard');
 
     // Internal inbox for messages submitted through the public contact form.
     Route::livewire('mensajes-contacto', ContactMessagesIndex::class)->name('contact-messages.index');
