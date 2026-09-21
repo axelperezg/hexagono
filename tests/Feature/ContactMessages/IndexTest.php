@@ -31,7 +31,7 @@ test('the sidebar orders its sections and items', function () {
 
     $this->get(route('dashboard'))
         ->assertSeeInOrder([
-            'Administrador', 'Sectores', 'Organizaciones', 'Contactos', 'Usuarios',
+            'Plataforma', 'Catálogos', 'Sectores', 'Organizaciones', 'Contactos', 'Usuarios',
             'Leads', 'Oportunidades', 'Tareas',
             'Página WEB', 'Mensajes de contacto',
         ]);
@@ -41,7 +41,7 @@ test('the sidebar hides the users item from non-admin users', function () {
     $this->actingAs(User::factory()->create());
 
     $this->get(route('dashboard'))
-        ->assertSee('Administrador')
+        ->assertSee('Catálogos')
         ->assertDontSee(route('users.index'));
 });
 
