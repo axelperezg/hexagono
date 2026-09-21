@@ -84,7 +84,7 @@ class Board extends Component
     public function render(): View
     {
         $cards = $this->boardQuery()
-            ->with(['organization', 'owner', 'tags'])
+            ->with(['organization', 'owner'])
             ->orderBy('board_position')
             ->orderByDesc('id')
             ->get()

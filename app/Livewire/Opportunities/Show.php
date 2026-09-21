@@ -20,7 +20,7 @@ use Livewire\Component;
 
 /**
  * Detail page of an opportunity (routed at /oportunidades/{opportunity}):
- * shows its summary and tags, lets any authenticated user move it through
+ * shows its summary, lets any authenticated user move it through
  * the pipeline, log interactions and manage its tasks (through the shared App\Livewire\Tasks\Form modal), lists its stage
  * history, and lets admins delete interactions and tasks.
  */
@@ -47,7 +47,7 @@ class Show extends Component
     {
         abort_if($opportunity->organization === null, 404);
 
-        $this->opportunity = $opportunity->load('tags');
+        $this->opportunity = $opportunity;
         $this->pipeline_stage_id = (string) $opportunity->pipeline_stage_id;
         $this->resetInteractionForm();
     }
