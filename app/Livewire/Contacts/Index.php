@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Contacts;
 
+use App\Enums\PhoneType;
 use App\Models\Contact;
 use App\Models\Organization;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -42,7 +44,12 @@ class Index extends Component
 
     public string $email = '';
 
-    public string $phone = '';
+    /**
+     * Rows come from the browser, so their shape is only trusted after validation.
+     *
+     * @var array<int, mixed>
+     */
+    public array $phones = [];
 
     public string $address = '';
 
@@ -66,8 +73,27 @@ class Index extends Component
     public function createContact(): void
     {
         $this->resetForm();
+        $this->addPhone();
 
         Flux::modal('contact-form')->show();
+    }
+
+    /**
+     * Append a blank phone row to the repeater.
+     */
+    public function addPhone(): void
+    {
+        $this->phones[] = ['type' => PhoneType::Mobile->value, 'number' => ''];
+    }
+
+    /**
+     * Remove a phone row from the repeater.
+     */
+    public function removePhone(int $index): void
+    {
+        unset($this->phones[$index]);
+
+        $this->phones = array_values($this->phones);
     }
 
     /**
@@ -83,7 +109,9 @@ class Index extends Component
         $this->name = $contact->name;
         $this->position = (string) $contact->position;
         $this->email = (string) $contact->email;
-        $this->phone = (string) $contact->phone;
+        $this->phones = $contact->phones
+            ->map(fn ($phone) => ['type' => $phone->type->value, 'number' => $phone->number])
+            ->all();
         $this->address = (string) $contact->address;
         $this->maps_url = (string) $contact->maps_url;
         $this->is_primary = $contact->is_primary;
@@ -98,14 +126,21 @@ class Index extends Component
      */
     public function save(): void
     {
+        // Rows left blank are dropped instead of failing validation.
+        $this->phones = array_values(array_filter(
+            $this->phones,
+            fn (mixed $phone) => is_array($phone) && trim((string) ($phone['number'] ?? '')) !== '',
+        ));
+
         $validated = $this->validate($this->rules());
 
+        $phones = $validated['phones'];
         $attributes = array_map(
             fn (mixed $value) => $value === '' ? null : $value,
-            $validated,
+            Arr::except($validated, ['phones']),
         );
 
-        DB::transaction(function () use ($attributes) {
+        DB::transaction(function () use ($attributes, $phones) {
             if ($attributes['is_primary']) {
                 Contact::where('organization_id', $attributes['organization_id'])
                     ->when($this->editingContactId, fn ($query) => $query->whereKeyNot($this->editingContactId))
@@ -113,10 +148,17 @@ class Index extends Component
             }
 
             if ($this->editingContactId) {
-                Contact::findOrFail($this->editingContactId)->update($attributes);
+                $contact = Contact::findOrFail($this->editingContactId);
+                $contact->update($attributes);
             } else {
-                Contact::create($attributes);
+                $contact = Contact::create($attributes);
             }
+
+            $contact->phones()->delete();
+            $contact->phones()->createMany(array_map(
+                fn (array $phone) => ['type' => $phone['type'], 'number' => trim($phone['number'])],
+                $phones,
+            ));
         });
 
         Flux::toast(variant: 'success', text: $this->editingContactId ? __('Contacto actualizado.') : __('Contacto creado.'));
@@ -184,7 +226,7 @@ class Index extends Component
     private function contacts(): LengthAwarePaginator
     {
         return Contact::query()
-            ->with('organization')
+            ->with(['organization', 'phones'])
             ->whereHas('organization')
             ->when(
                 $this->search !== '',
@@ -210,7 +252,9 @@ class Index extends Component
             'name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
+            'phones' => ['array'],
+            'phones.*.type' => ['required', Rule::enum(PhoneType::class)],
+            'phones.*.number' => ['required', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
             // Restricted to http(s) because the value is rendered as a link.
             'maps_url' => ['nullable', 'url:http,https', 'max:2048'],
@@ -224,7 +268,7 @@ class Index extends Component
      */
     private function resetForm(): void
     {
-        $this->reset(['editingContactId', 'organization_id', 'name', 'position', 'email', 'phone', 'address', 'maps_url', 'is_primary', 'notes']);
+        $this->reset(['editingContactId', 'organization_id', 'name', 'position', 'email', 'phones', 'address', 'maps_url', 'is_primary', 'notes']);
         $this->resetErrorBag();
     }
 }
