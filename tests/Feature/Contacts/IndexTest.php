@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\PhoneType;
 use App\Livewire\Contacts\Index;
 use App\Models\Contact;
+use App\Models\ContactPhone;
 use App\Models\Organization;
 use App\Models\User;
+use Illuminate\Validation\Rules\Enum;
 use Livewire\Livewire;
 
 test('the contacts module requires authentication', function () {
@@ -79,6 +82,105 @@ test('the maps url must be an http or https url', function () {
     }
 
     $component->set('maps_url', '')->call('save')->assertHasNoErrors();
+});
+
+test('a contact can store several phones with their kind', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createContact')
+        ->set('organization_id', (string) $organization->id)
+        ->set('name', 'Ana Torres')
+        ->set('phones.0.type', PhoneType::Office->value)
+        ->set('phones.0.number', '5512345678')
+        ->call('addPhone')
+        ->set('phones.1.type', PhoneType::Home->value)
+        ->set('phones.1.number', '5587654321')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $contact = Contact::firstWhere('name', 'Ana Torres');
+
+    expect($contact->phones->map(fn (ContactPhone $phone) => [$phone->type, $phone->number])->all())
+        ->toBe([[PhoneType::Office, '5512345678'], [PhoneType::Home, '5587654321']]);
+});
+
+test('phone rows can be added and removed from the repeater', function () {
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(Index::class)
+        ->call('createContact')
+        ->assertCount('phones', 1)
+        ->call('addPhone')
+        ->call('addPhone')
+        ->assertCount('phones', 3)
+        ->set('phones.1.number', 'second')
+        ->call('removePhone', 0)
+        ->assertCount('phones', 2)
+        ->assertSet('phones.0.number', 'second');
+});
+
+test('blank phone rows are ignored when saving', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createContact')
+        ->set('organization_id', (string) $organization->id)
+        ->set('name', 'Ana Torres')
+        ->call('addPhone')
+        ->set('phones.1.number', '5512345678')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(Contact::firstWhere('name', 'Ana Torres')->phones)->toHaveCount(1);
+});
+
+test('a phone needs a valid kind and a number of at most 50 characters', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('createContact')
+        ->set('organization_id', (string) $organization->id)
+        ->set('name', 'Ana Torres')
+        ->set('phones.0.type', 'fax')
+        ->set('phones.0.number', str_repeat('5', 51))
+        ->call('save')
+        ->assertHasErrors(['phones.0.type' => Enum::class, 'phones.0.number' => 'max']);
+
+    expect(Contact::count())->toBe(0);
+});
+
+test('editing a contact loads its phones and replaces them on save', function () {
+    $this->actingAs(User::factory()->create());
+    $contact = Contact::factory()->create();
+    ContactPhone::factory()->for($contact)->create(['type' => PhoneType::Mobile, 'number' => '5511111111']);
+    ContactPhone::factory()->for($contact)->create(['type' => PhoneType::Home, 'number' => '5522222222']);
+
+    Livewire::test(Index::class)
+        ->call('editContact', $contact->id)
+        ->assertSet('phones', [
+            ['type' => 'mobile', 'number' => '5511111111'],
+            ['type' => 'home', 'number' => '5522222222'],
+        ])
+        ->call('removePhone', 1)
+        ->set('phones.0.number', '5533333333')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($contact->phones()->pluck('number')->all())->toBe(['5533333333']);
+});
+
+test('the contacts list shows each phone with its kind', function () {
+    $this->actingAs(User::factory()->create());
+    $contact = Contact::factory()->create();
+    ContactPhone::factory()->for($contact)->create(['type' => PhoneType::Office, 'number' => '5599999999']);
+
+    Livewire::test(Index::class)
+        ->assertSee('Oficina:')
+        ->assertSee('5599999999');
 });
 
 test('the contact requires a name and an existing organization', function () {

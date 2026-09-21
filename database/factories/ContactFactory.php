@@ -23,7 +23,6 @@ class ContactFactory extends Factory
             'name' => fake()->name(),
             'position' => fake()->jobTitle(),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->numerify('55########'),
             'address' => fake()->address(),
             'maps_url' => null,
             'is_primary' => false,

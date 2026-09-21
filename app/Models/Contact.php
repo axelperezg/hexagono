@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -19,7 +20,6 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string|null $position
  * @property string|null $email
- * @property string|null $phone
  * @property string|null $address
  * @property string|null $maps_url
  * @property bool $is_primary
@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['organization_id', 'name', 'position', 'email', 'phone', 'address', 'maps_url', 'is_primary', 'notes'])]
+#[Fillable(['organization_id', 'name', 'position', 'email', 'address', 'maps_url', 'is_primary', 'notes'])]
 class Contact extends Model
 {
     /** @use HasFactory<ContactFactory> */
@@ -52,6 +52,14 @@ class Contact extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany<ContactPhone, $this>
+     */
+    public function phones(): HasMany
+    {
+        return $this->hasMany(ContactPhone::class);
     }
 
     /**

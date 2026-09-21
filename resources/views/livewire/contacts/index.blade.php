@@ -30,7 +30,7 @@
             <flux:table.columns>
                 <flux:table.column>{{ __('Contacto') }}</flux:table.column>
                 <flux:table.column>{{ __('Organización') }}</flux:table.column>
-                <flux:table.column>{{ __('Teléfono') }}</flux:table.column>
+                <flux:table.column>{{ __('Teléfonos') }}</flux:table.column>
                 <flux:table.column></flux:table.column>
             </flux:table.columns>
 
@@ -61,7 +61,14 @@
                                 </a>
                             @endif
                         </flux:table.cell>
-                        <flux:table.cell class="whitespace-nowrap">{{ $contact->phone }}</flux:table.cell>
+                        <flux:table.cell class="whitespace-nowrap">
+                            @foreach ($contact->phones as $phone)
+                                <div>
+                                    <span class="text-zinc-500">{{ $phone->type->label() }}:</span>
+                                    {{ $phone->number }}
+                                </div>
+                            @endforeach
+                        </flux:table.cell>
                         <flux:table.cell class="py-0">
                             <div class="flex justify-end gap-1">
                                 <flux:button size="sm" variant="ghost" icon="pencil" wire:click="editContact({{ $contact->id }})">
@@ -115,11 +122,31 @@
                 <flux:error name="email" />
             </flux:field>
 
-            <flux:field>
-                <flux:label>{{ __('Teléfono') }}</flux:label>
-                <flux:input wire:model="phone" autocomplete="off" />
-                <flux:error name="phone" />
-            </flux:field>
+            <div class="space-y-2">
+                <flux:label>{{ __('Teléfonos') }}</flux:label>
+
+                @foreach ($phones as $index => $phone)
+                    <div wire:key="phone-{{ $index }}" class="space-y-1">
+                        <div class="flex items-start gap-2">
+                            <flux:select wire:model="phones.{{ $index }}.type" class="max-w-36" aria-label="{{ __('Tipo de teléfono') }}">
+                                @foreach (\App\Enums\PhoneType::cases() as $type)
+                                    <flux:select.option value="{{ $type->value }}">{{ $type->label() }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+
+                            <flux:input wire:model="phones.{{ $index }}.number" autocomplete="off" placeholder="{{ __('Número') }}" aria-label="{{ __('Número de teléfono') }}" />
+
+                            <flux:button variant="ghost" icon="trash" wire:click="removePhone({{ $index }})" aria-label="{{ __('Quitar teléfono') }}" />
+                        </div>
+                        <flux:error name="phones.{{ $index }}.type" />
+                        <flux:error name="phones.{{ $index }}.number" />
+                    </div>
+                @endforeach
+
+                <flux:button size="sm" variant="subtle" icon="plus" wire:click="addPhone">
+                    {{ __('Agregar teléfono') }}
+                </flux:button>
+            </div>
 
             <flux:field>
                 <flux:label>{{ __('Dirección') }}</flux:label>
