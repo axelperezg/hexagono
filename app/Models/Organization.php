@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Concerns\HasTags;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,7 +31,7 @@ use Illuminate\Support\Facades\Storage;
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
-    use HasFactory, HasTags, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
      * Public URL of the uploaded logo, null when the organization has none.

@@ -3,6 +3,7 @@
 use App\Livewire\Organizations\Index;
 use App\Models\Organization;
 use App\Models\Sector;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -220,4 +221,15 @@ test('a user can remove the logo of an organization', function () {
 
     expect($organization->refresh()->logo_path)->toBeNull();
     Storage::disk('public')->assertMissing($path);
+});
+
+test('organizations no longer offer tags in the list, the filter or the form', function () {
+    $this->actingAs(User::factory()->create());
+    Tag::factory()->create(['name' => 'Prioritaria']);
+    Organization::factory()->create();
+
+    Livewire::test(Index::class)
+        ->assertDontSee('Prioritaria')
+        ->assertDontSee('Etiqueta')
+        ->assertDontSee('etiquetas');
 });
