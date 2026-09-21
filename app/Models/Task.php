@@ -8,22 +8,25 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * A pending follow-up on an opportunity, with a due date and an assignee.
+ * A piece of work with a start and end date and an assignee, optionally
+ * tied to an opportunity, that records the actions carried out on it.
  *
  * @property int $id
- * @property int $opportunity_id
+ * @property int|null $opportunity_id
  * @property int|null $user_id
- * @property string $title
+ * @property string $concept
  * @property string|null $notes
- * @property Carbon $due_date
+ * @property Carbon $start_date
+ * @property Carbon $end_date
  * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['opportunity_id', 'user_id', 'title', 'notes', 'due_date', 'completed_at'])]
+#[Fillable(['opportunity_id', 'user_id', 'concept', 'start_date', 'end_date', 'notes', 'completed_at'])]
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
@@ -37,7 +40,8 @@ class Task extends Model
     protected function casts(): array
     {
         return [
-            'due_date' => 'date',
+            'start_date' => 'date',
+            'end_date' => 'date',
             'completed_at' => 'datetime',
         ];
     }
@@ -48,6 +52,16 @@ class Task extends Model
     public function opportunity(): BelongsTo
     {
         return $this->belongsTo(Opportunity::class);
+    }
+
+    /**
+     * Actions carried out on the task, oldest first.
+     *
+     * @return HasMany<TaskAction, $this>
+     */
+    public function actions(): HasMany
+    {
+        return $this->hasMany(TaskAction::class)->orderBy('performed_at')->orderBy('id');
     }
 
     /**
@@ -74,10 +88,10 @@ class Task extends Model
     }
 
     /**
-     * A pending task whose due date is before today.
+     * A pending task whose end date is before today.
      */
     public function isOverdue(): bool
     {
-        return ! $this->isCompleted() && $this->due_date->isBefore(today());
+        return ! $this->isCompleted() && $this->end_date->isBefore(today());
     }
 }
