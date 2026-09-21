@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
- * A free-form label shared by organizations and opportunities.
+ * A free-form label for opportunities.
  *
  * @property int $id
  * @property string $name
