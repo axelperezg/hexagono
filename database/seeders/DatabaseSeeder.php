@@ -23,5 +23,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(PipelineStageSeeder::class);
+        $this->call(SectorSeeder::class);
+        $this->call(OrganizationSeeder::class);
+        $this->call(ContactSeeder::class);
     }
 }
