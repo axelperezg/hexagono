@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+// Pixel-art edition of the landing page, with a diagram per service
+// (resources/views/pixelart.blade.php).
+Route::view('/pixelart', 'pixelart')->name('pixelart');
+
 // Public contact form on the landing page (resources/views/welcome.blade.php).
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
 
