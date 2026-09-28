@@ -56,6 +56,7 @@
                 <a href="#metodologia" class="underline-draw hover:text-white">Metodología</a>
                 <a href="#sectores" class="underline-draw hover:text-white">Sectores</a>
                 <a href="#contacto" class="underline-draw hover:text-white">Contacto</a>
+                <a href="{{ route('pixelart') }}" class="underline-draw hover:text-white">Pixel art</a>
             </nav>
 
             <a
@@ -86,6 +87,7 @@
                 <a href="#metodologia" class="hover:text-white">Metodología</a>
                 <a href="#sectores" class="hover:text-white">Sectores</a>
                 <a href="#contacto" class="font-medium text-electric">Contacto</a>
+                <a href="{{ route('pixelart') }}" class="hover:text-white">Versión pixel art</a>
             </nav>
         </div>
     </header>
