@@ -32,6 +32,16 @@
     --color-electric: #4a9eff;
     --color-ink: #0a0a0a;
     --color-panel: #111111;
+
+    /* Pixel-art variant of the landing page (resources/views/pixelart.blade.php).
+       Fonts are loaded from Bunny Fonts in that view's <head>. */
+    --font-pixel: 'Press Start 2P', ui-monospace, monospace;
+    --font-retro: 'VT323', ui-monospace, monospace;
+    --color-pixel-night: #0b0f1f;
+    --color-pixel-panel: #1a2140;
+    --color-pixel-yellow: #ffd23f;
+    --color-pixel-pink: #ff5c8a;
+    --color-pixel-green: #3ddc97;
 }
 
 @layer theme {
@@ -136,7 +146,140 @@ select:focus[data-flux-control] {
     background-size: 48px 48px;
 }
 
+/* -------------------------------------------------------------------------
+   Pixel-art landing page (resources/views/pixelart.blade.php)
+   Chunky stepped borders, hard drop shadows, a pixel starfield
+   and step-timed animations. Scroll reveals and the contact form reuse
+   resources/js/landing.js.
+   ------------------------------------------------------------------------- */
+
+/* Layered as components so Tailwind utilities (e.g. [--pixel-border:...])
+   can override these defaults. */
+@layer components {
+    /* A 4px border with notched corners, drawn with box-shadows so the box
+       reads as pixels. Set --pixel-border to recolor it. */
+    .pixel-box,
+    .pixel-box-shadow {
+        --pixel-border: color-mix(in oklab, white 25%, transparent);
+    }
+
+    .pixel-box {
+        box-shadow:
+            0 -4px 0 0 var(--pixel-border),
+            0 4px 0 0 var(--pixel-border),
+            -4px 0 0 0 var(--pixel-border),
+            4px 0 0 0 var(--pixel-border);
+    }
+
+    .pixel-box-shadow {
+        box-shadow:
+            0 -4px 0 0 var(--pixel-border),
+            0 4px 0 0 var(--pixel-border),
+            -4px 0 0 0 var(--pixel-border),
+            4px 0 0 0 var(--pixel-border),
+            8px 8px 0 0 rgb(0 0 0 / 0.55);
+    }
+
+    /* Arcade-style button that presses down when clicked. */
+    .pixel-btn {
+        box-shadow:
+            inset -4px -4px 0 0 rgb(0 0 0 / 0.3),
+            inset 4px 4px 0 0 rgb(255 255 255 / 0.35),
+            4px 4px 0 0 rgb(0 0 0 / 0.6);
+        transition: transform 0.05s steps(1), box-shadow 0.05s steps(1);
+    }
+
+    .pixel-btn:hover {
+        transform: translate(-2px, -2px);
+    }
+
+    .pixel-btn:active {
+        transform: translate(4px, 4px);
+        box-shadow:
+            inset -4px -4px 0 0 rgb(0 0 0 / 0.3),
+            inset 4px 4px 0 0 rgb(255 255 255 / 0.35);
+    }
+
+    /* Square pixel "stars" scattered over the page background. */
+    .pixel-starfield {
+        background-image:
+            radial-gradient(white 1px, transparent 0),
+            radial-gradient(color-mix(in oklab, var(--color-electric) 80%, transparent) 1px, transparent 0),
+            radial-gradient(color-mix(in oklab, var(--color-pixel-yellow) 70%, transparent) 1px, transparent 0);
+        background-size: 97px 89px, 151px 131px, 211px 173px;
+        background-position: 13px 29px, 71px 5px, 37px 101px;
+    }
+
+    /* Faint CRT scanlines over a section. */
+    .pixel-scanlines {
+        background-image: repeating-linear-gradient(
+            to bottom,
+            color-mix(in oklab, white 3%, transparent) 0 2px,
+            transparent 2px 4px
+        );
+    }
+
+    /* Checkerboard strip used as a section divider. */
+    .pixel-divider {
+        height: 8px;
+        background-image: conic-gradient(
+            var(--color-pixel-panel) 25%,
+            transparent 0 50%,
+            var(--color-pixel-panel) 0 75%,
+            transparent 0
+        );
+        background-size: 16px 8px;
+    }
+
+    .pixel-diagram {
+        font-family: var(--font-retro);
+        font-size: 14px;
+        image-rendering: pixelated;
+    }
+
+    .pixel-blink {
+        animation: pixel-blink 1s steps(1) infinite;
+    }
+
+    .pixel-blink-slow {
+        animation: pixel-blink 2s steps(1) infinite;
+    }
+
+    .pixel-float {
+        animation: pixel-float 2.4s steps(4) infinite;
+    }
+
+    .pixel-nudge {
+        animation: pixel-nudge 1.2s steps(2) infinite;
+    }
+}
+
+@keyframes pixel-blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes pixel-float {
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes pixel-nudge {
+    50% {
+        transform: translateX(3px);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .pixel-blink,
+    .pixel-blink-slow,
+    .pixel-float,
+    .pixel-nudge {
+        animation: none;
+    }
+
     .reveal {
         opacity: 1;
         transform: none;

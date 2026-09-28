@@ -12,3 +12,9 @@ test('landing page shows the commercial contact email and no phone number', func
     $response->assertSee('comercial@hexagono-ci.com');
     $response->assertDontSee('+52 (55) 0000 0000');
 });
+
+test('landing page links to the pixel art edition', function () {
+    $response = $this->get(route('home'));
+
+    $response->assertSee(route('pixelart'), escape: false);
+});
